@@ -26,3 +26,8 @@
 *.exe
 *.out
 *.app
+
+# Fireball specials
+*.log
+*.x
+*.xsf

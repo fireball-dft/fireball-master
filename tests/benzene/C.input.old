@@ -1,0 +1,59 @@
+Carbon                   atom name
+C                        atom abbreviation
+6                        atomic number
+12.0107                  atomic mass
+4.0                      number of valence electrons
+006.pp                   pseudopotential file
+2.0                      number of valence electrons (excited)
+006++.pp                 pseudopotential filename (excited)
+006_440.na0              neutral atom filename
+3                        exchange correlation
+2                        use excited states
+3                        number of shells
+0                        angular momentum for s shell
+2.0                      number of electrons in s shell
+4.0                      cutoff radius for s shell
+006_400.wf1              wavefunction filename for s shell
+006_400.na1              neutral atom filename for s shell
+1                        angular momentum for p shell
+2.0                      number of electrons in p shell
+4.4                      cutoff radius for p shell
+006_440.wf2              wavefunction filename for p shell
+006_440.na2              neutral atom filename for p shell
+2                        angular momentum for d shell
+0.0                      number of electrons in d shell
+4.4                      cutoff radius for d shell
+006_440.wf3              wavefunction filename for d shell
+006_440.na3              neutral atom filename for d shell
+1.0                      number of electrons in s shell (excited)
+006_400.ewf1             wavefunction filename for s shell
+006_400.ena1             neutral atom filename for s shell
+1.0                      number of electrons in p shell (excited)
+006_440.ewf2             wavefunction filename for p shell
+006_440.ena2             neutral atom filename for p shell
+0.0                      number of electrons in d shell (excited)
+006_440.ewf3             wavefunction filename for d shell
+006_440.ena3             neutral atom filename for d shell
+3.2                      looprc smallest cutoff radii
+5.2                      looprc largest cutoff radii
+0.1                      looprc delta for cutoff radii
+1                        optimize basis set with x-confinement potential
+0.0                      Vo for s shell
+0.0                      r0 for s shell
+0.0                      Vo for p shell
+0.0                      r0 for p shell
+100.0                    Vo for d shell
+0.5                      r0 for d shell
+2.0                      Vo for s shell (excited)
+0.5                      r0 for s shell (excited)
+2.0                      Vo for p shell (excited)
+0.5                      r0 for p shell (excited)
+0.0                      Vo for d shell (excited)
+0.0                      r0 for d shell (excited)
+2.0                      a0 for s shell
+1.0                      a0 for p shell
+0.8                      a0 for d shell
+1.0                      charge mixing factor for s shell
+1.0                      charge mixing factor for p shell
+1.0                      charge mixing factor for d shell
+           1  - Number of species 
