@@ -11,12 +11,12 @@ install:
     - sudo apt-add-repository --yes ppa:ubuntu-toolchain-r/test
     - sudo apt-get update
     - sudo apt-get install gcc-4.8 gfortran-4.8 libgomp1 openmpi-bin libopenmpi-dev liblapack-dev libblas-dev
-
+    - ls -al
     - git clone https://github.com/fireball-dft/fireball-fireball.git
     - git clone https://github.com/fireball-dft/fireball-master.git
     - cd fireball-master/src
     - make libs
-    - cd ../fireball-fireball/src
+    - cd ../../fireball-fireball/src
     - ./runme_before_compile.sh
     - make fireball.x
 
