@@ -15,9 +15,8 @@ install:
     - git clone https://github.com/fireball-dft/fireball-fireball.git
     - git clone https://github.com/fireball-dft/fireball-master.git
     - cd fireball-master/src
-    - ./runme_before_compile.sh
     - make libs
-    - cd fireball-fireball/src
+    - cd ../fireball-fireball/src
     - ./runme_before_compile.sh
     - make fireball.x
 
