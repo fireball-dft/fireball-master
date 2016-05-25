@@ -27,8 +27,9 @@
 # clause at 52.227-7013.
 
 # Choose the COMPILER
+COMPILER = gfortran-mp-5
+#COMPILER = gfortran-4.8
 #COMPILER = ifort
-COMPILER = gfortran
 
 #LINALG = MKL
 LINALG = LAPACK
@@ -279,7 +280,7 @@ lfireball-MDET.x: x.DRIVERS/fireball-MDET.f90 $(LIBS_FIREBALL_MDET)
 # LIBRARIES
 # *****************************************************************************
 
-libs:  libthd_GLOBAL.a libthd_FUNCTIONS.a libthd_SYSTEM.a libthd_FUNCTIONS_EXTRA.a libthd_FDATA.a libthd_noMPI.a libthd_XC_FUNCTIONALS.a libthd_SOLVESH.a libthd_GRID.a libthd_ASSEMBLERS_HARRIS.a libthd_ASSEMBLERS_DOGS.a libthd_ASSEMBLERS_KS.a libthd_ASSEMBLERS_PP.a libthd_DASSEMBLERS_HARRIS.a libthd_DASSEMBLERS_DOGS.a libthd_SCF.a libthd_NAC.a libthd_HARRIS.a libthd_DOGS.a libthd_UTIL.a libthd_BEGIN.a libthd_BEGIN_LOOPRC.a
+libs:  libthd_GLOBAL.a libthd_FUNCTIONS.a libthd_SYSTEM.a libthd_FUNCTIONS_EXTRA.a libthd_FDATA.a libthd_noMPI.a libthd_XC_FUNCTIONALS.a libthd_SOLVESH.a libthd_GRID.a libthd_ASSEMBLERS_HARRIS.a libthd_ASSEMBLERS_DOGS.a libthd_ASSEMBLERS_KS.a libthd_ASSEMBLERS_PP.a libthd_DASSEMBLERS_HARRIS.a libthd_DASSEMBLERS_DOGS.a libthd_SCF.a libthd_NAC.a libthd_HARRIS.a libthd_DOGS.a libthd_UTIL.a 
 
 libthd_GLOBAL.a:
 	cd a.GLOBAL && $(MAKE) $@

@@ -60,7 +60,10 @@
 ! one-center xc data for McWEDA
         type T_vxc_1c
           real, pointer :: E(:,:)              !< xc-energy (shells)
+          real, pointer :: dE(:,:,:)           !< 1st derivatives of energy
+
           real, pointer :: V(:, :)             !< Vxc potential
+          real, pointer :: dV(:, :, :)         !< 1st derivatives of Vxc
         end type T_vxc_1c
 
 ! module variables
@@ -115,10 +118,9 @@
 
 ! Variable Declaration and Description
 ! ===========================================================================
-        integer ispecies                   !< counters for number of species
-
-        integer nssh                      !< counters for number of shells
-        integer issh, jssh
+        integer ispecies                          !< counter for number of species
+        integer nssh                              !< counters for number of shells
+        integer issh, jssh, kssh
 
         character (len=32) filename
 
@@ -210,7 +212,9 @@
 ! ===========================================================================
         do ispecies = 1, nspecies
           deallocate (vxc_1c(ispecies)%E)
+          deallocate (vxc_1c(ispecies)%dE)
           deallocate (vxc_1c(ispecies)%V)
+          deallocate (vxc_1c(ispecies)%dV)
         end do
 
 ! Deallocate Arrays

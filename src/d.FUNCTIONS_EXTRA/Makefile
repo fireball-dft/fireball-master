@@ -8,7 +8,7 @@ clean:
 	rm -rf *.a *.o *.mod *genmod.f90 *~
 
 libthd_FUNCTIONS_EXTRA.a: $(FUNCTIONS_EXTRA)
-	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
+	ar rcs $@ $^ && mv $@ ../libs
 
 %.o: %.f90
 	${F90} ${FFLAGS} -c $< -I../include

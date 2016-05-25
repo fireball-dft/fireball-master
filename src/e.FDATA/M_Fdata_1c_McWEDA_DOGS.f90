@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2010
+!                             @Copyright 2012
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -39,6 +39,7 @@
 !
 ! ===========================================================================
 ! Code written by:
+!> @author Ning Ma
 !> @author James P. Lewis\n
 !! Box 6315, 209 Hodges Hall\n
 !! Department of Physics\n
@@ -117,12 +118,11 @@
 
 ! Variable Declaration and Description
 ! ===========================================================================
-        integer ispecies		          !< counter for number of species
-
-        integer nssh                      !< counters for number of shells
+        integer ispecies                          !< counter for number of species
+        integer nssh                              !< counters for number of shells
         integer issh, jssh, kssh
 
-        character (len=30) filename
+        character (len=32) filename
 
 ! Allocate Arrays
 ! ===========================================================================

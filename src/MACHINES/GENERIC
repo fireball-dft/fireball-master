@@ -38,8 +38,8 @@ ifneq (,$(findstring GENERIC, ${MACHINE}))
 	endif
 
 	ifneq (,$(findstring gfortran, ${COMPILER}))
-		F77 = gfortran
-		F90 = gfortran
+		F77 = ${COMPILER}
+		F90 = ${COMPILER}
 
 		ifneq (,$(findstring MKL, ${LINALG}))
 		      FFLAGS = -O2 -fdefault-real-8 -m64 -I$(MKLROOT)/include

@@ -11,10 +11,10 @@ clean:
 	rm -rf *.a *.o *.mod *genmod.f90 *~
 
 libthd_MPI.a: $(OBJECTS_MPI)
-	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
+	ar rcs $@ $^ && mv $@ ../libs 
 
 libthd_noMPI.a: $(OBJECTS_noMPI)
-	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
+	ar rcs $@ $^ && mv $@ ../libs 
 
 %.o: %.f90
 	${F90} ${FFLAGS} -c $<

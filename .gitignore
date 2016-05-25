@@ -31,3 +31,5 @@
 *.log
 *.x
 *.xsf
+.project
+.svn
