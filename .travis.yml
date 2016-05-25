@@ -23,9 +23,9 @@ install:
     - ./runme_before_compile.sh
     - make fireball.x
 
-script: 
+script: true
     # make check PFUNIT=pfunit
 
-after_success:
+after_success: true
     # find .
     # codecov --gcov-exec=gcov-4.8
