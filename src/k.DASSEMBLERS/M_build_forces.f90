@@ -379,7 +379,7 @@
             else
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
-                  pfi%vxc_off_site(:,ineigh) = pfi%vxc_off_site(:,ineigh)              &
+                  pfi%vxc_off_site(:,ineigh) = pfi%vxc_off_site(:,ineigh)    &
      &              - pRho_neighbors%block(imu,inu)*pvxc_neighbors%Dblock(:,imu,inu)
                 end do
               end do
@@ -387,7 +387,7 @@
 
             do inu = 1, norb_mu
               do imu = 1, norb_mu
-                pfi%vxc_on_site(:,ineigh) = pfi%vxc_on_site(:,ineigh)              &
+                pfi%vxc_on_site(:,ineigh) = pfi%vxc_on_site(:,ineigh)        &
      &              - pRho_neighbors_matom%block(imu,inu)*pvxc_neighbors%Dblocko(:,imu,inu)
               end do
             end do
@@ -522,6 +522,14 @@
             pfi%ftot = pfi%ftot + pfi%vna_ontop(:,ineigh)
             pfj%ftot = pfj%ftot - pfi%vna_ontop(:,ineigh)
 
+            pfi%vxc = pfi%vxc + pfi%vxc_off_site(:,ineigh) !arturo
+            pfj%vxc = pfj%vxc - pfi%vxc_off_site(:,ineigh) !arturo
+            
+            pfi%ftot = pfi%ftot + pfi%vxc_off_site(:,ineigh) !arturo
+            pfj%ftot = pfj%ftot - pfi%vxc_off_site(:,ineigh) !arturo
+
+            pfi%vxc = pfi%vxc + pfi%vxc_on_site(:,ineigh) !arturo
+            pfj%vxc = pfj%vxc - pfi%vxc_on_site(:,ineigh) !arturo
 
             pfi%ftot = pfi%ftot + pfi%vxc_off_site(:,ineigh) !arturo
             pfj%ftot = pfj%ftot - pfi%vxc_off_site(:,ineigh) !arturo
@@ -659,27 +667,36 @@
         end do
         write (logfile,100)
 
-        write (logfile,*)
-        write (logfile,103) 'The short-range (double-counting) (usr) force: '
         write (logfile,100)
+        write (logfile,*)
+        write (logfile,103) 'The exchange correlation (vxc_) force: '
+        write (logfile,100)  
+        write (logfile,101)
+        write (logfile,100)
+        do iatom = 1, s%natoms
+          write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%vxc
+        end do
+        write (logfile,100)
+
+        write (logfile,*)
+        write (logfile,103) 'The short-range (double-counting) (usr_) force: '
+        write (logfile,100) 
         write (logfile,101)
         write (logfile,100)
         do iatom = 1, s%natoms
           write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%usr
         end do
-        write (logfile,100)
-
+        
 ! Deallocate Arrays
 ! ===========================================================================
 ! None
 
 ! Format Statements
 ! ===========================================================================
-
 100     format (4x, 70('='))
 101     format (4x, 'Atom # ', 2x, ' Type ', 5x,   &
      &              ' x ', 9x, ' y ', 9x, ' z ')
-102     format (4x, i5, 7x, a2, 3(2x,ES10.3))
+102     format (4x,  i5, 7x, a2, 3(2x,ES10.3))
 103     format (4x, A)
 
 
