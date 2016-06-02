@@ -31,8 +31,8 @@
 COMPILER = gfortran-4.8
 #COMPILER = ifort
 
-#LINALG = MKL
 LINALG = LAPACK
+#LINALG = MKL
 
 # Do you use DEBUG or Optimization Mode? (DEBUG/OPT)
 MODE = OPT
@@ -250,12 +250,14 @@ veryclean: cleanall
 # *****************************************************************************
 
 lbegin-looprc.x : x.DRIVERS/begin-looprc.f90 $(LIBS_LOOPRC)
-	ls libs
-	$(F90) -o $@ $(FFLAGS) $< -I./include -L./libs $(LFLAGS_LOOPRC) ${LFLAGS}
+	ls -al libs
+	ls -al libs/
+	$(F90) -o $@ $(FFLAGS) $< -I./include -Llibs/ $(LFLAGS_LOOPRC) ${LFLAGS}
 
 lbegin.x : x.DRIVERS/begin.f90 $(LIBS_BEGIN)
-	ls libs
-	$(F90) -o $@ $(FFLAGS) $< -I./include -L./libs $(LFLAGS_BEGIN) ${LFLAGS}
+	ls -al libs
+	ls -al libs/
+	$(F90) -o $@ $(FFLAGS) $< -I./include -Llibs/ $(LFLAGS_BEGIN) ${LFLAGS}
 
 lcreate.x : x.DRIVERS/create.f90 $(LIBS_CREATE)
 	ls libs
