@@ -250,25 +250,32 @@ veryclean: cleanall
 # *****************************************************************************
 
 lbegin-looprc.x : x.DRIVERS/begin-looprc.f90 $(LIBS_LOOPRC)
-	$(F90) -o $@ $(FFLAGS) $< -I./include -Llibs $(LFLAGS_LOOPRC) ${LFLAGS}
+	ls libs
+	$(F90) -o $@ $(FFLAGS) $< -I./include -L./libs $(LFLAGS_LOOPRC) ${LFLAGS}
 
 lbegin.x : x.DRIVERS/begin.f90 $(LIBS_BEGIN)
-	$(F90) -o $@ $(FFLAGS) $< -I./include -Llibs $(LFLAGS_BEGIN) ${LFLAGS}
+	ls libs
+	$(F90) -o $@ $(FFLAGS) $< -I./include -L./libs $(LFLAGS_BEGIN) ${LFLAGS}
 
 lcreate.x : x.DRIVERS/create.f90 $(LIBS_CREATE)
-	$(F90) -o $@ $(FFLAGS) $< -I./include -Llibs $(LFLAGS_CREATE) ${LFLAGS}
+	ls libs
+	$(F90) -o $@ $(FFLAGS) $< -I./include -L./libs $(LFLAGS_CREATE) ${LFLAGS}
 
 llightning.x: x.DRIVERS/lightning.f90 $(LIBS_LIGHTNING)
-	$(F90) -o $@ $(FFLAGS) $(OMP) $< -I./include -Llibs $(LFLAGS_LIGHTNING) ${LFLAGS}
+	ls libs
+	$(F90) -o $@ $(FFLAGS) $(OMP) $< -I./include -L./libs $(LFLAGS_LIGHTNING) ${LFLAGS}
 
 llightning-grid.x: x.DRIVERS/lightning-grid.f90 $(LIBS_LIGHTNING_GRID)
-	$(F90) -o $@ $(FFLAGS) $(OMP) $< -I./include -Llibs $(LFLAGS_LIGHTNING_GRID) ${LFLAGS} $(LFLAGS_FFT)
+	ls libs
+	$(F90) -o $@ $(FFLAGS) $(OMP) $< -I./include -L./libs $(LFLAGS_LIGHTNING_GRID) ${LFLAGS} $(LFLAGS_FFT)
 
 lfireball.x: x.DRIVERS/fireball.f90 $(LIBS_FIREBALL)
-	$(F90) -o $@ $(FFLAGS) $< -I./include -Llibs $(LFLAGS_FIREBALL) ${LFLAGS}
+	ls libs
+	$(F90) -o $@ $(FFLAGS) $< -I./include -L./libs $(LFLAGS_FIREBALL) ${LFLAGS}
 
 lfireball-MDET.x: x.DRIVERS/fireball-MDET.f90 $(LIBS_FIREBALL_MDET)
-	$(F90) -o $@ $(FFLAGS) $< -I./include -Llibs $(LFLAGS_FIREBALL_MDET) ${LFLAGS}
+	ls libs
+	$(F90) -o $@ $(FFLAGS) $< -I./include -L./libs $(LFLAGS_FIREBALL_MDET) ${LFLAGS}
 
 # *****************************************************************************
 # LIBRARIES
