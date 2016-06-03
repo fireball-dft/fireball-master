@@ -196,7 +196,7 @@ LIBS_CREATE = $(LIBS_COMMON) libthd_FUNCTIONS_EXTRA.a libthd_XC_FUNCTIONALS.a li
 LIBS_DOGS = libthd_FDATA_DOGS.a libthd_ASSEMBLERS_DOGS.a libthd_DASSEMBLERS_DOGS.a libthd_DOGS.a
 LIBS_LIGHTNING = $(LIBS_COMMON) libthd_FUNCTIONS_EXTRA.a libthd_XC_FUNCTIONALS.a libthd_SOLVESH.a libthd_FDATA.a libthd_SCF.a libthd_OUTPUT.a libthd_UTIL.a libthd_ASSEMBLERS_PP.a libthd_HARRIS.a libthd_FDATA_DOGS.a libthd_ASSEMBLERS_DOGS.a
 LIBS_LIGHTNING_GRID = $(LIBS_LIGHTNING)
-LIBS_FIREBALL = $(LIBS_COMMON) libthd_FUNCTIONS_EXTRA.a libthd_XC_FUNCTIONALS.a libthd_SOLVESH.a libthd_ASSEMBLERS_PP.a libthd_SCF.a libthd_MD.a libthd_UTIL.a libthd_HARRIS.a $(LIBS_DOGS)
+LIBS_FIREBALL = $(LIBS_COMMON) libthd_FUNCTIONS_EXTRA.a libthd_XC_FUNCTIONALS.a libthd_SOLVESH.a libthd_ASSEMBLERS_PP.a libthd_SCF.a libthd_MD.a libthd_UTIL.a libthd_HARRIS.a $(LIBS_DOGS) libthd_OUTPUT.a
 
 LFLAGS_COMMON = -lthd_SYSTEM -lthd_FUNCTIONS -lthd_GLOBAL
 LFLAGS_LOOPRC = -lthd_BEGIN_LOOPRC -lthd_VXC_MCWEDA -lthd_XC_FUNCTIONALS $(LFLAGS_COMMON)
@@ -205,7 +205,7 @@ LFLAGS_CREATE = -lthd_DOGS -lthd_HARRIS -lthd_VXC_MCWEDA -lthd_XC_FUNCTIONALS -l
 LFLAGS_DOGS = -lthd_FDATA_DOGS -lthd_ASSEMBLERS_DOGS -lthd_DASSEMBLERS_DOGS -lthd_DOGS
 LFLAGS_LIGHTNING = -lthd_SCF -lthd_SOLVESH -lthd_UTIL -lthd_OUTPUT -lthd_FDATA -lthd_FDATA_DOGS -lthd_ASSEMBLERS_DOGS -lthd_ASSEMBLERS_PP -lthd_XC_FUNCTIONALS -lthd_FUNCTIONS_EXTRA -lthd_FUNCTIONS_EXTRA  $(LFLAGS_COMMON)
 LFLAGS_LIGHTNING_GRID = -lthd_GRID -lthd_FUNCTIONS_EXTRA $(LFLAGS_LIGHTNING)
-LFLAGS_FIREBALL = -lthd_UTIL -lthd_SCF -lthd_MD $(LFLAGS_DOGS) -lthd_ASSEMBLERS_PP -lthd_FDATA -lthd_SOLVESH -lthd_XC_FUNCTIONALS $(LFLAGS_COMMON)
+LFLAGS_FIREBALL = -lthd_UTIL -lthd_OUTPUT -lthd_SCF -lthd_MD $(LFLAGS_DOGS) -lthd_ASSEMBLERS_PP -lthd_FDATA -lthd_SOLVESH -lthd_XC_FUNCTIONALS -lthd_FUNCTIONS_EXTRA $(LFLAGS_COMMON)
 
 # This line export variables to the Makefiles called inside each
 # directory
@@ -250,33 +250,24 @@ veryclean: cleanall
 # *****************************************************************************
 
 lbegin-looprc.x : x.DRIVERS/begin-looprc.f90 $(LIBS_LOOPRC)
-	ls -al libs
-	ls -al libs/
 	$(F90) -o $@ $(FFLAGS) $< -I./include -Llibs/ $(LFLAGS_LOOPRC) ${LFLAGS}
 
 lbegin.x : x.DRIVERS/begin.f90 $(LIBS_BEGIN)
-	ls -al libs
-	ls -al libs/
 	$(F90) -o $@ $(FFLAGS) $< -I./include -Llibs/ $(LFLAGS_BEGIN) ${LFLAGS}
 
 lcreate.x : x.DRIVERS/create.f90 $(LIBS_CREATE)
-	ls libs
 	$(F90) -o $@ $(FFLAGS) $< -I./include -L./libs $(LFLAGS_CREATE) ${LFLAGS}
 
 llightning.x: x.DRIVERS/lightning.f90 $(LIBS_LIGHTNING)
-	ls libs
 	$(F90) -o $@ $(FFLAGS) $(OMP) $< -I./include -L./libs $(LFLAGS_LIGHTNING) ${LFLAGS}
 
 llightning-grid.x: x.DRIVERS/lightning-grid.f90 $(LIBS_LIGHTNING_GRID)
-	ls libs
 	$(F90) -o $@ $(FFLAGS) $(OMP) $< -I./include -L./libs $(LFLAGS_LIGHTNING_GRID) ${LFLAGS} $(LFLAGS_FFT)
 
 lfireball.x: x.DRIVERS/fireball.f90 $(LIBS_FIREBALL)
-	ls libs
 	$(F90) -o $@ $(FFLAGS) $< -I./include -L./libs $(LFLAGS_FIREBALL) ${LFLAGS}
 
 lfireball-MDET.x: x.DRIVERS/fireball-MDET.f90 $(LIBS_FIREBALL_MDET)
-	ls libs
 	$(F90) -o $@ $(FFLAGS) $< -I./include -L./libs $(LFLAGS_FIREBALL_MDET) ${LFLAGS}
 
 # *****************************************************************************
