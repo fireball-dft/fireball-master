@@ -27,6 +27,7 @@
 # clause at 52.227-7013.
 
 # Choose the COMPILER
+#COMPILER = gfortran
 #COMPILER = gfortran-mp-5
 COMPILER = gfortran-4.8
 #COMPILER = ifort

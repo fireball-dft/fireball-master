@@ -58,7 +58,7 @@ ifneq (,$(findstring GENERIC, ${MACHINE}))
 		      LFLAGS =  -Wl,--no-as-needed -L${MKLROOT}/lib/intel64 -lmkl_gf_lp64 -lmkl_core -lmkl_sequential -lpthread -lm
 		      LFLAGS_FFT = -I$(FFTPATH) -L$(MKLPATH) $(MKLPATH)/libfftw3xf_intel.a \
 		      $(MKLPATH)/libmkl_em64t.a -Bdynamic $(MKLPATH)/libguide.a
-		      LFLAGS_FFT = -lfftw3
+		      LFLAGS_FFT = 
 		endif
 
 		ifneq (,$(findstring LAPACK, ${LINALG}))
@@ -72,7 +72,7 @@ ifneq (,$(findstring GENERIC, ${MACHINE}))
 		      endif
 
 		      LFLAGS = -L/usr/lib64 -llapack -lblas -lpthread -lm
-		      LFLAGS_FFT = 
+		      LFLAGS_FFT = -lfftw3
 		endif
 
 
