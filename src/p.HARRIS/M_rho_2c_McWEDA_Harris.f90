@@ -322,8 +322,8 @@
                 d = d + drr
 
                 ! Set integration limits
-                zmin = max(-rcutoff1, d - rcutoff2)
-                zmax = min(rcutoff1, d + rcutoff2)
+                zmin = min(-rcutoff1, d - rcutoff2)
+                zmax = max(rcutoff1, d + rcutoff2)
 
                 call evaluate_integral_2c (nFdata_cell_2c, ispecies,         &
      &                                     jspecies, isorp, ideriv, rcutoff1,&
@@ -599,8 +599,8 @@
                 d = d + drr
 
                 ! Set integration limits
-                zmin = max(-rcutoff1, d - rcutoff2)
-                zmax = min(rcutoff1, d + rcutoff2)
+                zmin = min(-rcutoff1, d - rcutoff2)
+                zmax = max(rcutoff1, d + rcutoff2)
 
                 call evaluate_integral_2c (nFdata_cell_2c, ispecies,         &
      &                                     jspecies, isorp, ideriv, rcutoff1,&
@@ -876,8 +876,8 @@
                 d = d + drr
 
                 ! Set integration limits
-                zmin = max(-rcutoff1, d - rcutoff2)
-                zmax = min(rcutoff1, d + rcutoff2)
+                zmin = min(-rcutoff1, d - rcutoff2)
+                zmax = max(rcutoff1, d + rcutoff2)
 
                 call evaluate_integral_2c (nFdata_cell_2c, ispecies,         &
      &                                     jspecies, isorp, ideriv, rcutoff1,&

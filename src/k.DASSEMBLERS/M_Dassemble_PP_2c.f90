@@ -485,8 +485,8 @@
           call densityPP_matrix (s)
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max !no PP
-          matom = s%neighbors_PPp_self(iatom)
-          !matom = s%neigh_self(iatom)
+          !matom = s%neighbors_PPp_self(iatom) <-- before
+          matom = s%neighbors_PP_self(iatom) ! <--change
           num_neigh = s%neighbors_PP(iatom)%neighn
           !print *, matom, iatom,  num_neigh, 'matom, iatom, num_neigh_pp'
 ! allocate force terms and initialize to zero

@@ -136,6 +136,7 @@
 ! Local Variable Declaration and Description
 ! ===========================================================================
         integer ispecies, jspecies, kspecies        ! counters over species
+        integer logfile                             !< writing to which unit
 
         type (T_Fdata_bundle_3c), pointer :: pFdata_bundle
 
@@ -145,14 +146,17 @@
 
 ! Procedure
 ! ===========================================================================
-        write (*, *)
-        write (*, *) ' Sizing three-center integrals: '
+! Initialize logfile
+        logfile = 21
+
+        write (logfile, *)
+        write (logfile, *) ' Sizing three-center integrals: '
         do ispecies = 1, nspecies
           do jspecies = 1, nspecies
             do kspecies = 1, nspecies
               ! cut some lengthy notation
               pFdata_bundle=>Fdata_bundle_3c(ispecies, jspecies, kspecies)
-              write (*,100) ispecies, jspecies, kspecies, pFdata_bundle%nFdata_cell_3c
+              write (logfile,100) ispecies, jspecies, kspecies, pFdata_bundle%nFdata_cell_3c
               allocate (pFdata_bundle%Fdata_cell_3c(pFdata_bundle%nFdata_cell_3c))
 
 ! Set this back to zero and then start counting as interactions are computed.

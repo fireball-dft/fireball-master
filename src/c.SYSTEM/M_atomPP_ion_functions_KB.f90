@@ -200,7 +200,6 @@
 
         xmin = 0.0d0
         xxp = (r - (xmin + (imid-1)*h))
-        write(*,*) 'imid', imid, 'ileft', ileft, 'iam', iam, 'xmin', xmin
 
         psiofr_ion = a(iam) + b(iam)*xxp + c(iam)*xxp**2 + d(iam)*xxp**3
 
