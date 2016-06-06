@@ -596,6 +596,9 @@
                 rhat = (r3 - 0.5d0*(r1 + r2))/x
               end if
               cost = dot_product(sighat, rhat)
+              if (abs(cost) - 1.0d0 .lt. 0.010d0) then                
+                cycle
+              end if              
               call epsilon_function (rhat, sighat, eps)
               call Depsilon_3c (r1, r2, r21, z, r3, rhat, eps, depsA, depsB)
 
@@ -1212,6 +1215,9 @@
               end if
 
               cost = dot_product(sighat, rhat)
+              if (abs(cost) - 1.0d0 .lt. 0.010d0) then                
+                cycle
+              end if              
               call epsilon_function (rhat, sighat, eps)
               call Depsilon_3c (r1, r2, r21, z, r3, rhat, eps, depsA, depsB)
 

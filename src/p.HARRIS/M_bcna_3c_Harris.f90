@@ -390,7 +390,7 @@
 ! in a mu, nu form - single dimension array form.
 ! ===========================================================================
         subroutine phiint_bcna (itype, ispecies, jspecies, kspecies, ispmin, &
-     &                             ispmax, r, ds, zr, rna, avgVmat)
+     &                          ispmax, r, ds, zr, rna, avgVmat)
         implicit none
 
         include '../include/gridsizes.h'

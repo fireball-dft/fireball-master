@@ -1225,11 +1225,6 @@
                     density = density + xnocc*psiofr(r1, rmax, ispecies, issh)**2
                   end do
 
-                  if (igrid .eq. ndd_vxc) then
-                    rmax = species(jspecies)%shell(1)%rcutoffA
-                    write (31,*) z2, r2, psiofr(r2, rmax, jspecies, 1)
-                  end if
-
                   do jssh = 1, species(jspecies)%nssh
                     xnocc = species(jspecies)%shell(jssh)%Qneutral
                     rmax = species(jspecies)%shell(jssh)%rcutoffA
@@ -1334,7 +1329,6 @@
               end if
 
             end do ! end loop over the grid (distance between centers)
-            stop
           end do
         end do   ! end loop over species
 
@@ -1478,8 +1472,8 @@
               d = d + drr
 
               ! Set integration limits
-              zmin = max(-rcutoff1, d - rcutoff2)
-              zmax = min(rcutoff1, d + rcutoff2)
+              zmin = min(-rcutoff1, d - rcutoff2)
+              zmax = max(rcutoff1, d + rcutoff2)
 
               call evaluate_integral_2c (nFdata_cell_2c, ispecies, jspecies, &
      &                                   isorp, ideriv, rcutoff1, rcutoff2,  &
@@ -1707,7 +1701,7 @@
 ! Find which grid point we are located:
         dmax = wf(ispecies)%rcutoffA_max + wf(jspecies)%rcutoffA_max
         drr = dmax/float(ndd_vxc - 1)
-        igrid = int(d/drr) + 1
+        igrid = int(d/drr + 0.6) + 1
 
 ! Set up pointer for which grid point:
         prho_bundle=>rho_2c_bundle(ispecies, jspecies)

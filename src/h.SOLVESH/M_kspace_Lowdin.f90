@@ -180,10 +180,10 @@
         type(T_assemble_neighbors), pointer :: pkinetic
         type(T_assemble_block), pointer :: pvna_neighbors
         type(T_assemble_neighbors), pointer :: pvna
-        !type(T_assemble_block), pointer :: pSR_neighbors
-        !type(T_assemble_neighbors), pointer :: pewaldsr
-        !type(T_assemble_block), pointer :: pLR_neighbors
-        !type(T_assemble_neighbors), pointer :: pewaldlr
+        type(T_assemble_block), pointer :: pSR_neighbors
+        type(T_assemble_neighbors), pointer :: pewaldsr
+        type(T_assemble_block), pointer :: pLR_neighbors
+        type(T_assemble_neighbors), pointer :: pewaldlr
         type(T_assemble_block), pointer :: pvxc_neighbors
         type(T_assemble_neighbors), pointer :: pvxc
 
@@ -199,8 +199,8 @@
           pHamiltonian=>s%Hamiltonian(iatom)
           pkinetic=>s%kinetic(iatom)
           pvna=>s%vna(iatom)
-         ! pewaldsr=>s%ewaldsr(iatom)
-          !pewaldlr=>s%ewaldlr(iatom)
+          pewaldsr=>s%ewaldsr(iatom)
+          pewaldlr=>s%ewaldlr(iatom)
           pvxc=>s%vxc(iatom)
 
           in1 = s%atom(iatom)%imass
@@ -214,8 +214,8 @@
             pH_neighbors=>pHamiltonian%neighbors(ineigh)
             pK_neighbors=>pkinetic%neighbors(ineigh)
             pvna_neighbors=>pvna%neighbors(ineigh)
-            !pSR_neighbors=>pewaldsr%neighbors(ineigh)
-            !pLR_neighbors=>pewaldlr%neighbors(ineigh)
+            pSR_neighbors=>pewaldsr%neighbors(ineigh)
+            pLR_neighbors=>pewaldlr%neighbors(ineigh)
             pvxc_neighbors=>pvxc%neighbors(ineigh)
 
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
@@ -225,9 +225,8 @@
             
             pH_neighbors%block = pK_neighbors%block + pvna_neighbors%block   & 
         &                        + pvna_neighbors%blocko                     &
-        &                        + pvxc_neighbors%block !- pSR_neighbors%block&
-       ! &                        + pLR_neighbors%block
-           !write(*,'(F7.3, A)') pH_neighbors%block, 'pH_neighbors%block'
+        &                        + pvxc_neighbors%block - pSR_neighbors%block&
+        &                        + pLR_neighbors%block
           end do
         end do
 
@@ -312,10 +311,10 @@
         type(T_assemble_block), pointer :: pvnl_neighbors
         type(T_assemble_neighbors), pointer :: pvnl
 
-        !type(T_assemble_block), pointer :: pSR_neighbors
-       ! type(T_assemble_neighbors), pointer :: pewaldsr
-        !type(T_assemble_block), pointer :: pLR_neighbors
-        !type(T_assemble_neighbors), pointer :: pewaldlr
+        type(T_assemble_block), pointer :: pSR_neighbors
+        type(T_assemble_neighbors), pointer :: pewaldsr
+        type(T_assemble_block), pointer :: pLR_neighbors
+        type(T_assemble_neighbors), pointer :: pewaldlr
 
         type(T_assemble_block), pointer :: pH_neighbors
         type(T_assemble_neighbors), pointer :: pHamiltonian
@@ -345,8 +344,8 @@
           pvna=>s%vna(iatom)
           prho_in=>s%rho_in(iatom)
           pvxc=>s%vxc(iatom)
-         ! pewaldsr=>s%ewaldsr(iatom)
-         ! pewaldlr=>s%ewaldlr(iatom)
+          pewaldsr=>s%ewaldsr(iatom)
+          pewaldlr=>s%ewaldlr(iatom)
           pvnl=>s%vnl(iatom)
           pHamiltonian=>s%Hamiltonian(iatom)
 
@@ -435,12 +434,12 @@
             write (logfile,'(4x,A)') 'ewaldsr: short-range ewald interactions '
             write (logfile,'(4x,A)') '--------------------------------------- '
             ! cut some more lengthy notation
-            !pSR_neighbors=>pewaldsr%neighbors(ineigh)
+            pSR_neighbors=>pewaldsr%neighbors(ineigh)
             norb_mu = species(in1)%norb_max
             norb_nu = species(in2)%norb_max
             do imu = 1, norb_mu
               write (logfile,104)                                            &
-     &         !(pSR_neighbors%block(imu,inu), inu = 1, norb_nu)
+     &         (pSR_neighbors%block(imu,inu), inu = 1, norb_nu)
             end do
 
 ! Long-range ewald matrix elements
@@ -448,12 +447,12 @@
             write (logfile,'(4x,A)') 'ewaldlr: long-range ewald interactions '
             write (logfile,'(4x,A)') '-------------------------------------- '
             ! cut some more lengthy notation
-            !pLR_neighbors=>pewaldlr%neighbors(ineigh)
+            pLR_neighbors=>pewaldlr%neighbors(ineigh)
             norb_mu = species(in1)%norb_max
             norb_nu = species(in2)%norb_max
             do imu = 1, norb_mu
               write (logfile,104)                                            &
-     &         !(pLR_neighbors%block(imu,inu), inu = 1, norb_nu)
+     &         (pLR_neighbors%block(imu,inu), inu = 1, norb_nu)
             end do
 
 ! Complete Hamiltonian (without vnl) matrix elements
@@ -492,7 +491,6 @@
             end do
           end do
         end do
-!        write (logfile,101)
 
 ! Deallocate Arrays
 ! ===========================================================================
