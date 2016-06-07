@@ -1,15 +1,15 @@
-HARRIS=M_bcna_3c_Harris.o M_Coulomb.o M_kinetic.o M_overlap.o M_vna_Harris.o M_rho_2c_McWEDA_Harris.o M_rho_3c_McWEDA_Harris.o M_rhoS_2c_McWEDA_Harris.o M_rhoS_3c_McWEDA_Harris.o M_vnl_KB.o
+THEORY=M_Coulomb.f90  M_dipole_z.f90  M_kinetic.f90  M_overlap.f90 M_vxc_McWEDA_DOGS.f90 
 VXC_MCWEDA = M_vxc_McWEDA_Harris.o
 VXC_HORSFIELD = M_vxc_Horsfield_Harris.o
 
-all: libthd_HARRIS.a
+all: libthd_THEORY.a libthd_VXC_MCWEDA.a libthd_VXC_HORSFIELD.a
 
 .PHONY: clean
 
 clean:
 	rm -rf *.a *.o *.mod *genmod.o *~
 
-libthd_HARRIS.a: $(HARRIS)
+libthd_THEORY.a: $(THEORY)
 	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
 
 libthd_VXC_MCWEDA.a: $(VXC_MCWEDA)

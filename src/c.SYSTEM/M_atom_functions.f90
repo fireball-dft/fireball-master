@@ -208,7 +208,7 @@
           wf(ispecies)%dr_min = 99.0d0
 
           write (ilogfile,*)
-          write (ilogfile,'(A35,I,A4,I3,A1)') '### Atomic wavefunctions for specie: ', &
+          write (ilogfile,'(A35,I3,A4,I3,A1)') '### Atomic wavefunctions for specie: ', &
      &           ispecies, ' (Z=', species(ispecies)%nZ, ')'
           write (ilogfile,*)
 

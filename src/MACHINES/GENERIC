@@ -44,7 +44,7 @@ ifneq (,$(findstring GENERIC, ${MACHINE}))
 		ifneq (,$(findstring MKL, ${LINALG}))
 		      FFLAGS = -O2 -fdefault-real-8 -m64 -I$(MKLROOT)/include
 		      ifneq (,$(findstring DEBUG, ${MODE}))
-		      FFLAGS = -fdefault-real-8 -g -fbounds-check -Wcharacter-truncation -m64 -I$(MKLROOT)/include
+		      FFLAGS = -fdefault-real-8 -g -fbounds-check -Wall -Wcharacter-truncation -m64 -I$(MKLROOT)/include
 		      endif
 
 		      ifneq (,$(findstring YES,${OPENMP}))
