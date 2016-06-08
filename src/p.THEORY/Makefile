@@ -1,8 +1,9 @@
-THEORY=M_Coulomb.f90  M_dipole_z.f90  M_kinetic.f90  M_overlap.f90 M_vxc_McWEDA_DOGS.f90 
+THEORY=M_Coulomb.o  M_dipole_z.o  M_kinetic.o  M_overlap.o
 VXC_MCWEDA = M_vxc_McWEDA_Harris.o
 VXC_HORSFIELD = M_vxc_Horsfield_Harris.o
+VXC_DOGS = M_vxc_McWEDA_DOGS.o
 
-all: libthd_THEORY.a libthd_VXC_MCWEDA.a libthd_VXC_HORSFIELD.a
+all: libthd_VXC_MCWEDA.a libthd_VXC_HORSFIELD.a libthd_THEORY.a
 
 .PHONY: clean
 
@@ -13,6 +14,9 @@ libthd_THEORY.a: $(THEORY)
 	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
 
 libthd_VXC_MCWEDA.a: $(VXC_MCWEDA)
+	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
+
+libthd_VXC_DOGS.a: $(VXC_DOGS)
 	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
 
 libthd_VXC_HORSFIELD.a: $(VXC_HORSFIELD)

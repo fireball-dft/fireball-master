@@ -1,4 +1,4 @@
-NAMD=
+NAMD=M_adiabatic.o M_non_adiabatic_gamma.o
 
 all: libthd_NAMD.a 
 
@@ -7,13 +7,7 @@ all: libthd_NAMD.a
 clean:
 	rm -rf *.a *.o *.mod *genmod.o *~
 
-libthd_THEORY.a: $(THEORY)
-	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
-
-libthd_VXC_MCWEDA.a: $(VXC_MCWEDA)
-	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
-
-libthd_VXC_HORSFIELD.a: $(VXC_HORSFIELD)
+libthd_NAMD.a: $(NAMD)
 	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
 
 %.o: %.f90

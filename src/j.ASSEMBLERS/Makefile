@@ -12,10 +12,10 @@ all: libthd_ASSEMBLERS_Harris.a libthd_ASSEMBLERS_Dogs.a libthd_ASSEMBLERS_KS.a
 clean:
 	rm -rf *.a *.o *.mod *genmod.f90 *~
 
-libthd_ASSEMBLERS_Harris.a: $(ASSEMBLERS_HARRIS)
+libthd_ASSEMBLERS_HARRIS.a: $(ASSEMBLERS_HARRIS)
 	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
 
-libthd_ASSEMBLERS_Dogs.a: $(ASSEMBLERS_DOGS)
+libthd_ASSEMBLERS_DOGS.a: $(ASSEMBLERS_DOGS)
 	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
 
 libthd_ASSEMBLERS_KS.a: $(ASSEMBLERS_KS)

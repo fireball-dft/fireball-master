@@ -121,7 +121,6 @@
         type(T_assemble_block), pointer :: pRho_neighbors
         type(T_assemble_neighbors), pointer :: pdenmat
 
-
 ! Allocate Arrays
 ! ===========================================================================
         allocate (s%denmat (s%natoms))
@@ -208,7 +207,7 @@
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
           allocate (pdenmat%neighbors(num_neigh))
-          write(93,*) iatom, 'iatom'
+
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             ! cut some more lengthy notation
@@ -217,11 +216,12 @@
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
-            write(93,*) ineigh, 'ineigh'
+
 ! Allocate the block size
             norb_nu = species(in2)%norb_max
             allocate (pRho_neighbors%block(norb_mu, norb_nu))
             pRho_neighbors%block = 0.0d0
+
 ! Loop over the special k points.
             do ikpoint = 1, s%nkpoints
 
@@ -306,10 +306,8 @@
 ! ===========================================================================
         integer iatom, ineigh              !< counter over atoms and neighbors
         integer iband, ikpoint             !< counter of band and kpoint
-!        integer ihomo                      !< highest occupied level
         integer imu, inu
         integer in1, in2                   !< species numbers
-!        integer issh
         integer jatom                      !< neighbor of iatom
         integer logfile                    !< writing to which unit
         integer mmu, nnu
@@ -319,26 +317,14 @@
         integer norb_mu, norb_nu         !< size of the block for the pair
 
         real dot                         !< dot product between K and r
-!        real efermi
         real gutr                        !< real part of density matrix
-!        real qstate
 
         real, dimension (3) :: r1, r2    !< positions of iatom and jatom
         real, dimension (3) :: sks       !< k point value
         real, dimension (3) :: vec
 
-!        real z                         !< distance between r1 and r2
-
-!        real, dimension (3, 3) :: eps  !< the epsilon matrix
-!        real, dimension (3) :: sighat  !< unit vector along r2 - r1
-
-
         complex phase, phasex            !< phase between K and r
         complex step1, step2
-
-!        logical read_occupy
-
-!        character (len = 25) :: slogfile
 
         interface
           function distance (a, b)
@@ -351,6 +337,7 @@
         type(T_assemble_neighbors), pointer :: pcapemat
         type(T_assemble_block), pointer :: pRho_neighbors
         type(T_assemble_neighbors), pointer :: pdenmat
+
 ! Allocate Arrays
 ! ===========================================================================
         allocate (s%capemat (s%natoms))
@@ -359,13 +346,13 @@
 ! ===========================================================================
 ! Initialize logfile
         logfile = s%logfile
+
 ! ****************************************************************************
 !
 !                 C O M P U T E   C A P E   D E N S I T I E S
 ! ****************************************************************************
 ! Loop over all atoms iatom in the unit cell, and then over all its neighbors.
 ! Loop over the atoms in the central cell.
-
         do iatom = 1, s%natoms
           ! cut some lengthy notation
           pcapemat=>s%capemat(iatom)
@@ -375,9 +362,7 @@
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
           allocate (pcapemat%neighbors(num_neigh))
-          write(90,*) iatom, 'iatom'
-          write(91,*) iatom, 'iatom'
-          write(92,*) iatom, 'iatom'
+
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             ! cut some more lengthy notation
@@ -387,9 +372,7 @@
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
-            write(90,*) ineigh, 'ineigh'
-            write(91,*) ineigh, 'ineigh'
-            write(92,*) ineigh, 'ineigh'
+
 ! Allocate the block size
             norb_nu = species(in2)%norb_max
             allocate (pCape_neighbors%block(norb_mu, norb_nu))
@@ -433,6 +416,7 @@
 
           end do ! Finish loop over atoms and neighbors.
         end do
+
 ! Deallocate Arrays
 ! ===========================================================================
 ! None
@@ -447,10 +431,6 @@
 ! ===========================================================================
         return
         end subroutine cape_matrix
-
-
-
-
 
 
 ! ===========================================================================
@@ -500,7 +480,6 @@
         do ikpoint = 1, s%nkpoints
           do iband = 1, s%norbitals_new
             if (s%kpoints(ikpoint)%ioccupy(iband) .eq. 1) then
-            !print *, s%kpoints(ikpoint)%eigen(iband), 's%kpoints(ikpoint)%eigen(iband)'
               ebs = ebs + s%kpoints(ikpoint)%weight*P_spin*s%kpoints(ikpoint)%eigen(iband)  &
      &                                             *s%kpoints(ikpoint)%foccupy(iband)
               ztest = ztest + s%kpoints(ikpoint)%weight*P_spin*s%kpoints(ikpoint)%foccupy(iband)
@@ -945,6 +924,7 @@
 ! ===========================================================================
         return
         end subroutine writeout_density
+
 
 ! ===========================================================================
 ! destroy_denmat

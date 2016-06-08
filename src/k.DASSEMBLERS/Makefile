@@ -8,10 +8,10 @@ all: libthd_DASSEMBLERS_HARRIS.a libthd_DASSEMBLERS_DOGS.a
 clean:
 	rm -rf *.a *.o *.mod *genmod.f90 *~
 
-libthd_DASSEMBLERS_Harris.a: $(DASSEMBLERS_HARRIS)
+libthd_DASSEMBLERS_HARRIS.a: $(DASSEMBLERS_HARRIS)
 	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
 
-libthd_DASSEMBLERS_Dogs.a: $(DASSEMBLERS_DOGS)
+libthd_DASSEMBLERS_DOGS.a: $(DASSEMBLERS_DOGS)
 	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
 
 %.o: %.f90

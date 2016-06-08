@@ -41,7 +41,7 @@
 ! ===========================================================================
 ! Module Declaration
 ! ===========================================================================
-        module M_vxc_Harris
+        module M_vxc_Horsfield
         use M_atom_functions
         use M_atomPP_functions
         use M_atomPP_ion_functions
@@ -1170,8 +1170,8 @@
 
 ! Parameters and Data Declaration
 ! ===========================================================================
-        integer, parameter, dimension (0:4) :: jsign = /0, -1, +1, -1, +1/
-        integer, parameter, dimension (0:4) :: kspecies = /1, 1, 1, 2, 2/
+        integer, parameter, dimension (0:4) :: jsign = (/0, -1, +1, -1, +1/)
+        integer, parameter, dimension (0:4) :: kspecies = (/1, 1, 1, 2, 2/)
 
 ! Variable Declaration and Description
 ! ===========================================================================
@@ -2115,4 +2115,4 @@
 
 ! End Module
 ! =============================================================================
-        end module
+      end module

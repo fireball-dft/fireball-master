@@ -19,20 +19,19 @@
 # also Gary Adams, Juergen Frisch, John Tomfohr, Kevin Schmidt,
 #      and Spencer Shellman
 
-SHELL = /bin/bash
-
 #
 # RESTRICTED RIGHTS LEGEND
 # Use, duplication, or disclosure of this software and its documentation
 # by the Government is subject to restrictions as set forth in subdivision
 # { (b) (3) (ii) } of the Rights in Technical Data and Computer Software
 # clause at 52.227-7013.
+SHELL = /bin/bash
 
 # Choose the COMPILER
 #COMPILER = gfortran
 #COMPILER = gfortran-mp-5
-COMPILER = gfortran-4.8
-#COMPILER = ifort
+#COMPILER = gfortran-4.8
+COMPILER = ifort
 
 LINALG = LAPACK
 #LINALG = MKL
@@ -45,8 +44,8 @@ MODE = DEBUG
 OPENMP = NO
 
 # Choose the MACHINE file
-MACHINE = GENERIC
-#MACHINE = FIREBALL
+#MACHINE = GENERIC
+MACHINE = FIREBALL
 #MACHINE = MOUNTAINEER
 #MACHINE = SPRUCE
 
@@ -90,7 +89,7 @@ include MACHINES/GENERIC
 ###
 ######################################################################
 
-DIRS = a.GLOBAL b.FUNCTIONS c.SYSTEM d.FUNCTIONS_EXTRA e.FDATA f.MPI g.XC_FUNCTIONALS h.DASSEMBLERS i.GRID h.SOLVESH j.ASSEMBLERS k.DASSEMBLERS l.SCF m.MD n.NAMD o.OUTPUT p.THEORY u.UTIL v.BEGIN x.DRIVERS
+DIRS = a.GLOBAL b.FUNCTIONS c.SYSTEM d.FUNCTIONS_EXTRA e.FDATA f.MPI g.XC_FUNCTIONALS h.DASSEMBLERS i.GRID h.SOLVESH j.ASSEMBLERS k.CREATE k.DASSEMBLERS l.SCF m.MD n.NAMD o.OUTPUT p.THEORY u.UTIL v.BEGIN x.DRIVERS
 
 # Objects from a.CONFIG
 CONFIG = M_precision.o welcome.o M_assemble_blocks.o
@@ -112,7 +111,7 @@ FUNCTIONS_CREATE = initialize_noMPI.o finalize_noMPI.o
 FUNCTIONS_LIGHTNING = make_cells.o cl.o epsilon.o
 
 MD = M_gear_quench.o
-NAC = M_non_adiabatic_gamma.o M_Goverlap.o
+NAMD = M_non_adiabatic_gamma.o M_Goverlap.o
 OUTPUT = writeout_energies.o writeout_xyz.o writeout_xsf.o
 UTIL = absorption_gamma.o dos_gamma.o M_isosurfaces.o 
 SOLVESH = M_diagonalization_Lowdin_gamma.o M_kspace_Lowdin.o M_density_matrix.o
@@ -131,8 +130,8 @@ SCF = M_charges_Lowdin.o Qmixer_Anderson_Harris.o
 DASSEMBLERS = M_Drotations.o M_Drotations_PP.o M_Dassemble_rho_McWEDA_Harris.o M_Dassemble_2c_Harris.o M_Dassemble_PP_2c.o M_Dassemble_ewald_Harris.o M_Dassemble_usr_McWEDA_Harris.o M_build_forces.o M_Dassemble_3c_Harris.o M_Dassemble_vxc_McWEDA.o
 
 # For compiling by libraries
-LIBS_THEORY = libthd_FDATA_Harris.a libthd_ASSEMBLERS_Harris.a libthd_DASSEMBLERS_Harris.a libthd_HARRIS.a
-LFLAGS_THEORY = -lthd_FDATA_Harris -lthd_ASSEMBLERS_Harris -lthd_DASSEMBLERS_Harris -lthd_HARRIS
+LIBS_THEORY = libthd_FDATA_HARRISs.a libthd_ASSEMBLERS_HARRIS.a libthd_DASSEMBLERS_HARRIS.a libthd_THEORY.a
+LFLAGS_THEORY = -lthd_FDATA_HARRIS -lthd_ASSEMBLERS_HARRIS -lthd_DASSEMBLERS_HARRIS -lthd_THEORY
 endif
 
 # ****************************** DOGS ********************************
@@ -144,8 +143,8 @@ SCF = M_charges_Lowdin.o Qmixer_Anderson_DOGS.o
 DASSEMBLERS = M_Drotations.o M_Drotations_PP.o M_Dassemble_2c_DOGS.o M_Dassemble_PP_2c.o M_Dassemble_rho_McWEDA_DOGS.o M_Dassemble_ewald_Harris.o M_Dassemble_vxc_McWEDA.o M_Dassemble_usr_McWEDA_DOGS.o M_build_forces.o M_Dassemble_3c_DOGS.o
 
 # For compiling by libraries
-LIBS_THEORY = libthd_FDATA_Dogs.a libthd_ASSEMBLERS_Dogs.a libthd_DASSEMBLERS_Dogs.a libthd_DOGS.a
-LFLAGS_THEORY = -lthd_FDATA_Dogs -lthd_ASSEMBLERS_Dogs -lthd_DASSEMBLERS_Dogs -lthd_DOGS
+LIBS_THEORY = libthd_FDATA_DOGS.a libthd_ASSEMBLERS_DOGS.a libthd_DASSEMBLERS_DOGS.a libthd_THEORY.a
+LFLAGS_THEORY = -lthd_FDATA_DOGS -lthd_ASSEMBLERS_DOGS -lthd_DASSEMBLERS_DOGS -lthd_THEORY
 endif
 
 # ****************************** KS ********************************
@@ -181,7 +180,7 @@ OBJECTS_BEGIN =     $(CONFIG) $(FUNCTIONS) $(SYSTEM_BEGIN)     $(FUNCTIONS_BEGIN
 OBJECTS_CREATE =    $(CONFIG) $(FUNCTIONS) $(SYSTEM_CREATE)    $(FUNCTIONS_CREATE) $(XC_FUNCTIONALS) $(CREATE)
 OBJECTS_LIGHTNING = $(CONFIG) $(FUNCTIONS) $(SYSTEM_LIGHTNING) $(FUNCTIONS_LIGHTNING) $(FDATA) lda_ceperley_alder.o $(SOLVESH) $(ASSEMBLERS) $(SCF) $(OUTPUT) $(UTIL)
 OBJECTS_FIREBALL =  $(CONFIG) $(FUNCTIONS) $(SYSTEM)  $(FUNCTIONS_LIGHTNING) $(DFDATA) lda_ceperley_alder.o $(SOLVESH) $(ASSEMBLERS) $(DASSEMBLERS) $(SCF) $(MD) $(OUTPUT) $(UTIL)
-OBJECTS_MDET =      $(CONFIG) $(FUNCTIONS) $(SYSTEM)  $(FUNCTIONS_LIGHTNING) $(DFDATA) $(SOLVESH) $(ASSEMBLERS) $(DASSEMBLERS) $(SCF) $(MD) $(NAC) $(OUTPUT)
+OBJECTS_MDET =      $(CONFIG) $(FUNCTIONS) $(SYSTEM)  $(FUNCTIONS_LIGHTNING) $(DFDATA) $(SOLVESH) $(ASSEMBLERS) $(DASSEMBLERS) $(SCF) $(MD) $(NAMD) $(OUTPUT)
 OBJECTS_LIGHTNING_GRID = $(CONFIG) $(FUNCTIONS) $(SYSTEM_LIGHTNING) $(FUNCTIONS_LIGHTNING) $(FDATA) lda_ceperley_alder.o $(SOLVESH_GRID) $(GRID) $(ASSEMBLERS) $(SCF) $(OUTPUT) $(UTIL)
 
 ######################################################################
@@ -203,15 +202,15 @@ OBJECTS_LIGHTNING_GRID = $(CONFIG) $(FUNCTIONS) $(SYSTEM_LIGHTNING) $(FUNCTIONS_
 LIBS_COMMON = libthd_GLOBAL.a libthd_FUNCTIONS.a libthd_SYSTEM.a
 LIBS_BEGIN =  $(LIBS_COMMON) libthd_XC_FUNCTIONALS.a libthd_VXC_MCWEDA.a libthd_BEGIN.a
 LIBS_LOOPRC = $(LIBS_COMMON) libthd_XC_FUNCTIONALS.a libthd_VXC_MCWEDA.a libthd_BEGIN_LOOPRC.a
-LIBS_CREATE = $(LIBS_COMMON) libthd_FUNCTIONS_EXTRA.a libthd_XC_FUNCTIONALS.a libthd_NAC.a libthd_HARRIS.a libthd_VXC_MCWEDA.a libthd_Dogs.a
-LIBS_LIGHTNING = $(LIBS_COMMON) libthd_FUNCTIONS_EXTRA.a libthd_XC_FUNCTIONALS.a libthd_SOLVESH.a libthd_FDATA.a libthd_SCF.a libthd_OUTPUT.a libthd_UTIL.a libthd_ASSEMBLERS_PP.a libthd_HARRIS.a libthd_FDATA_Dogs.a libthd_ASSEMBLERS_Dogs.a
+LIBS_CREATE = $(LIBS_COMMON) libthd_XC_FUNCTIONALS.a libthd_CREATE.a libthd_THEORY.a libthd_VXC_MCWEDA.a libthd_VXC_DOGS.a
+LIBS_LIGHTNING = $(LIBS_COMMON) libthd_FUNCTIONS_EXTRA.a libthd_XC_FUNCTIONALS.a libthd_SOLVESH.a libthd_FDATA.a libthd_SCF.a libthd_OUTPUT.a libthd_UTIL.a libthd_ASSEMBLERS_PP.a libthd_THEORY.a libthd_FDATA_DOGS.a libthd_ASSEMBLERS_Dogs.a
 LIBS_LIGHTNING_GRID = $(LIBS_LIGHTNING)
 LIBS_FIREBALL = $(LIBS_COMMON) libthd_FUNCTIONS_EXTRA.a libthd_XC_FUNCTIONALS.a libthd_SOLVESH.a libthd_ASSEMBLERS_PP.a libthd_SCF.a libthd_MD.a libthd_UTIL.a $(LIBS_THEORY) libthd_OUTPUT.a
 
 LFLAGS_COMMON = -lthd_SYSTEM -lthd_FUNCTIONS -lthd_GLOBAL
 LFLAGS_LOOPRC = -lthd_BEGIN_LOOPRC -lthd_VXC_MCWEDA -lthd_XC_FUNCTIONALS $(LFLAGS_COMMON)
 LFLAGS_BEGIN = -lthd_BEGIN -lthd_VXC_MCWEDA -lthd_XC_FUNCTIONALS $(LFLAGS_COMMON)
-LFLAGS_CREATE = -lthd_DOGS -lthd_HARRIS -lthd_VXC_MCWEDA -lthd_XC_FUNCTIONALS -lthd_FUNCTIONS_EXTRA  $(LFLAGS_COMMON)
+LFLAGS_CREATE = -lthd_VXC_MCWEDA -lthd_VXC_DOGS -lthd_THEORY -lthd_CREATE -lthd_XC_FUNCTIONALS $(LFLAGS_COMMON)
 LFLAGS_LIGHTNING = -lthd_SCF -lthd_SOLVESH -lthd_UTIL -lthd_OUTPUT -lthd_FDATA -lthd_FDATA_DOGS -lthd_ASSEMBLERS_DOGS -lthd_ASSEMBLERS_PP -lthd_XC_FUNCTIONALS -lthd_FUNCTIONS_EXTRA -lthd_FUNCTIONS_EXTRA  $(LFLAGS_COMMON)
 LFLAGS_LIGHTNING_GRID = -lthd_GRID -lthd_FUNCTIONS_EXTRA $(LFLAGS_LIGHTNING)
 LFLAGS_FIREBALL = -lthd_UTIL -lthd_OUTPUT -lthd_SCF -lthd_MD $(LFLAGS_THEORY) -lthd_ASSEMBLERS_PP -lthd_FDATA -lthd_SOLVESH -lthd_XC_FUNCTIONALS -lthd_FUNCTIONS_EXTRA $(LFLAGS_COMMON)
@@ -283,7 +282,8 @@ lfireball-MDET.x: x.DRIVERS/fireball-MDET.f90 $(LIBS_FIREBALL_MDET)
 # LIBRARIES
 # *****************************************************************************
 
-libs:  libthd_GLOBAL.a libthd_FUNCTIONS.a libthd_SYSTEM.a libthd_FUNCTIONS_EXTRA.a libthd_FDATA.a libthd_FDATA_Dogs.a libthd_FDATA_Harris.a libthd_noMPI.a libthd_XC_FUNCTIONALS.a libthd_SOLVESH.a libthd_ASSEMBLERS_Harris.a libthd_ASSEMBLERS_Dogs.a libthd_ASSEMBLERS_KS.a libthd_ASSEMBLERS_PP.a libthd_DASSEMBLERS_Harris.a libthd_DASSEMBLERS_Dogs.a libthd_SCF.a libthd_NAMD.a libthd_THEORY.a libthd_Dogs.a libthd_UTIL.a 
+libs: libthd_GLOBAL.a libthd_FUNCTIONS.a libthd_SYSTEM.a libthd_FUNCTIONS_EXTRA.a libthd_FDATA.a libthd_FDATA_DOGS.a libthd_FDATA_HARRIS.a libthd_noMPI.a libthd_XC_FUNCTIONALS.a libthd_SOLVESH.a libthd_ASSEMBLERS_HARRIS.a libthd_ASSEMBLERS_DOGS.a libthd_ASSEMBLERS_KS.a libthd_DASSEMBLERS_HARRIS.a libthd_DASSEMBLERS_DOGS.a libthd_SCF.a libthd_MD.a libthd_NAMD.a libthd_OUTPUT.a libthd_VXC_MCWEDA.a  libthd_THEORY.a libthd_UTIL.a
+	@echo Notice: This library is excluded from compilation: libthd_VXC_HORSFIELD.a 
 
 libthd_GLOBAL.a:
 	cd a.GLOBAL && $(MAKE) $@
@@ -303,13 +303,16 @@ libthd_FUNCTIONS_EXTRA.a:
 libthd_FDATA.a: libthd_SYSTEM.a
 	cd e.FDATA && $(MAKE) $@
 
-libthd_FDATA_Harris.a: libthd_SYSTEM.a
+libthd_FDATA_HARRIS.a: libthd_SYSTEM.a
 	cd e.FDATA && $(MAKE) $@
 
-libthd_FDATA_Dogs.a: libthd_SYSTEM.a
+libthd_FDATA_DOGS.a: libthd_SYSTEM.a
 	cd e.FDATA && $(MAKE) $@
 
 libthd_noMPI.a:
+	cd f.MPI && $(MAKE) $@
+
+libthd_MPI.a:
 	cd f.MPI && $(MAKE) $@
 
 libthd_XC_FUNCTIONALS.a:
@@ -322,13 +325,10 @@ libthd_SOLVESH.a: libthd_SYSTEM.a libthd_FDATA.a
 libthd_GRID.a: libthd_SYSTEM.a libthd_SYSTEM.a
 	cd i.GRID && $(MAKE) $@
 
-libthd_GRID_EXTRA.a: libthd_SYSTEM.a
-	cd i.GRID && $(MAKE) $@
-
-libthd_ASSEMBLERS_Harris.a: libthd_SYSTEM.a libthd_SYSTEM.a libthd_FDATA.a libthd_FDATA_Harris.a
+libthd_ASSEMBLERS_HARRIS.a: libthd_SYSTEM.a libthd_SYSTEM.a libthd_FDATA.a libthd_FDATA_HARRIS.a
 	cd j.ASSEMBLERS && $(MAKE) $@
 
-libthd_ASSEMBLERS_Dogs.a: libthd_SYSTEM.a libthd_FDATA.a libthd_SYSTEM.a libthd_ASSEMBLERS_PP.a
+libthd_ASSEMBLERS_DOGS.a: libthd_SYSTEM.a libthd_FDATA.a libthd_SYSTEM.a libthd_ASSEMBLERS_PP.a
 	cd j.ASSEMBLERS && $(MAKE) $@
 
 libthd_ASSEMBLERS_KS.a: libthd_SYSTEM.a
@@ -337,10 +337,10 @@ libthd_ASSEMBLERS_KS.a: libthd_SYSTEM.a
 libthd_ASSEMBLERS_PP.a: libthd_SYSTEM.a libthd_FDATA.a libthd_SYSTEM.a
 	cd j.ASSEMBLERS && $(MAKE) $@
 
-libthd_DASSEMBLERS_Harris.a: libthd_ASSEMBLERS_PP.a
+libthd_DASSEMBLERS_HARRIS.a: libthd_ASSEMBLERS_PP.a
 	cd k.DASSEMBLERS && $(MAKE) $@
 
-libthd_DASSEMBLERS_Dogs.a: libthd_SYSTEM.a libthd_SYSTEM.a libthd_FDATA.a libthd_FDATA_Dogs.a
+libthd_DASSEMBLERS_DOGS.a: libthd_SYSTEM.a libthd_SYSTEM.a libthd_FDATA.a libthd_FDATA_DOGS.a
 	cd k.DASSEMBLERS && $(MAKE) $@
 
 libthd_SCF.a: libthd_SYSTEM.a libthd_SOLVESH.a
@@ -358,7 +358,16 @@ libthd_OUTPUT.a:
 libthd_THEORY.a: libthd_SYSTEM.a libthd_XC_FUNCTIONALS.a
 	cd p.THEORY && $(MAKE) $@
 
+libthd_CREATE.a: libthd_SYSTEM.a libthd_XC_FUNCTIONALS.a
+	cd k.CREATE && $(MAKE) $@
+
 libthd_VXC_MCWEDA.a: libthd_SYSTEM.a
+	cd p.THEORY && $(MAKE) $@
+
+libthd_VXC_DOGS.a: libthd_SYSTEM.a
+	cd p.THEORY && $(MAKE) $@
+
+libthd_VXC_HORSFIELD.a: libthd_SYSTEM.a
 	cd p.THEORY && $(MAKE) $@
 
 libthd_UTIL.a: libthd_SYSTEM.a libthd_FDATA.a
@@ -700,11 +709,11 @@ M_kinetic.o : p.THEORY/M_kinetic.f90
 	$(F90) $(FFLAGS) -c $^
 M_vxc_McWEDA_Harris.o :  p.THEORY/M_vxc_McWEDA_Harris.f90
 	$(F90) $(FFLAGS) -c $^
+M_vxc_McWEDA_DOGS.o : p.THEORY/M_vxc_McWEDA_DOGS.f90
+	$(F90) $(FFLAGS) -c $^
 M_Coulomb.o : p.THEORY/M_Coulomb.f90
 	$(F90) $(FFLAGS) -c $^
 M_dipole_z.o : p.THEORY/M_dipole_z.f90
-	$(F90) $(FFLAGS) -c $^
-M_vxc_McWEDA_DOGS.o : p.THEORY/M_vxc_McWEDA_DOGS.f90
 	$(F90) $(FFLAGS) -c $^
 
 # *****************************************************************************
@@ -718,8 +727,6 @@ M_vna_Harris.o : k.CREATE/M_vna_Harris.f90
 	$(F90) $(FFLAGS) -c $^
 M_vna_DOGS.o : k.CREATE/M_vna_DOGS.f90
 	$(F90) $(FFLAGS) -c $^
-M_vnl_KB.o : k.CREATE/M_vnl_KB.f90
-	$(F90) $(FFLAGS) -c $^
 M_rho_2c_McWEDA_Harris.o : k.CREATE/M_rho_2c_McWEDA_Harris.f90
 	$(F90) $(FFLAGS) -c $^
 M_rhoS_2c_McWEDA_Harris.o : k.CREATE/M_rhoS_2c_McWEDA_Harris.f90
@@ -729,6 +736,8 @@ M_rho_3c_McWEDA_Harris.o : k.CREATE/M_rho_3c_McWEDA_Harris.f90
 M_rhoS_3c_McWEDA_Harris.o : k.CREATE/M_rhoS_3c_McWEDA_Harris.f90
 	$(F90) $(FFLAGS) -c $^
 M_Goverlap.o : k.CREATE/M_Goverlap.f90
+	$(F90) $(FFLAGS) -c $^
+M_vnl_KB.o : k.CREATE/M_vnl_KB.f90
 	$(F90) $(FFLAGS) -c $^
 
 # *****************************************************************************
