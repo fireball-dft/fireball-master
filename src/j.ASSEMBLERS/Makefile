@@ -5,7 +5,7 @@ ASSEMBLERS_DOGS = M_assemble_2c_DOGS.o M_assemble_3c_DOGS.o M_assemble_ewald_DOG
 ASSEMBLERS_KS = M_assemble_3c_Harris.o M_assemble_ewald_DOGS.o M_assemble_rho_McWEDA_DOGS.o
 
 
-all: libthd_ASSEMBLERS_Harris.a libthd_ASSEMBLERS_Dogs.a libthd_ASSEMBLERS_KS.a
+all: libthd_ASSEMBLERS_HARRIS.a libthd_ASSEMBLERS_DOGS.a libthd_ASSEMBLERS_KS.a
 
 .PHONY: clean
 
