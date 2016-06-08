@@ -30,8 +30,8 @@ SHELL = /bin/bash
 # Choose the COMPILER
 #COMPILER = gfortran
 #COMPILER = gfortran-mp-5
-#COMPILER = gfortran-4.8
-COMPILER = ifort
+COMPILER = gfortran-4.8
+#COMPILER = ifort
 
 LINALG = LAPACK
 #LINALG = MKL
