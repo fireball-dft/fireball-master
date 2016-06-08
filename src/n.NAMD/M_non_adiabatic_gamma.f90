@@ -580,7 +580,9 @@
                  do jorbital = 1, s%norbitals
                  if (jorbital .eq. s%kpoints(ikpoint)%transition(jtransition,1)%imap) then
                     do ix = 1, 3
-                       s%kpoints(ikpoint)%transition(jtransition,1)%ddjk(ix)  =  s%kpoints(ikpoint)%transition(jtransition,1)%djk(ix) - s%kpoints(ikpoint)%transition(jtransition,1)%djk_old(ix)
+                       s%kpoints(ikpoint)%transition(jtransition,1)%ddjk(ix)  =  &
+                            & s%kpoints(ikpoint)%transition(jtransition,1)%djk(ix) - &
+                            & s%kpoints(ikpoint)%transition(jtransition,1)%djk_old(ix)
                        write (*,*) s%kpoints(ikpoint)%transition(jtransition,1)%ddjk(ix)
                     end do
                  end if
