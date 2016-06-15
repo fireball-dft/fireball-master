@@ -1,5 +1,5 @@
 SYSTEM = M_species.o M_atom_functions.o M_kpoints.o M_atomPP_functions_KB.o M_configuraciones_McWEDA.o make_cells.o\
-M_integrals_3c.o M_neighbors_PP.o M_atomPP_ion_functions_KB.o M_integrals_2c.o M_neighbors.o M_neighbors_vdW.o M_rotations.o
+M_integrals_3c.o M_neighbors_PP.o M_atomPP_ion_functions_KB.o M_integrals_2c.o M_neighbors.o M_neighbors_vdW.o M_rotations.o M_grid.o
 
 all: libthd_SYSTEM.a
 

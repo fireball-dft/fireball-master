@@ -434,7 +434,7 @@
         mesh = wf(ispecies)%shell_data(issh)%mesh
 
 ! Find starting point for the interpolation
-        ileft = imid - norder/2
+        ileft = imid - norder/2       
         if (ileft .lt. 1) then
           ileft = 1
         else if (ileft + norder .gt. mesh) then
@@ -748,14 +748,15 @@
 
 ! Procedure
 ! ===========================================================================
-! Special cases
+! Special case
         if (issh .eq. 0 .and. r .ge. species(ispecies)%rcutoffA_max) then
           vnaofr = 0.0d0
           return
-        else if (issh .ne. 0 .and.                                           &
-     &           r .gt. species(ispecies)%shell(issh)%rcutoffA) then
-          vnaofr = 1.0d0/r
-          return
+        else if (issh .ne. 0) then                                           
+          if (r .gt. species(ispecies)%shell(issh)%rcutoffA) then
+            vnaofr = 1.0d0/r
+            return
+          end if 
         else if (r .lt. 0.0d0) then
           vnaofr = na(ispecies)%shell_data(issh)%FofR(1)
           return

@@ -417,10 +417,8 @@
 ! Note the minus sign. d/dr1 = - eta * d/dd.
             do inu = 1, norb_nu
               do imu = 1, norb_mu
-                write(57,*) z, 'z'
                 if (z .gt. 1.0d-3) then 
                   vdtm(:,imu,inu) = - eta(:)*dtm(imu,inu)
-                  write(57,*) eta(:)*dtm(imu,inu), 'eta(:)*dtm(imu,inu)'
                 end if  
               end do
             end do
@@ -430,7 +428,6 @@
 
 ! Store the derivitive, rotate vector matrix.
             pK_neighbors%Dblock = vdtx
-            write (53, *) vdtx
             deallocate (tm, tx, dtm, vdtm, vdtx)
           end do ! end loop over neighbors
         end do ! end loop over atoms
@@ -601,7 +598,6 @@
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
-
 
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
@@ -793,7 +789,6 @@
 ! coordinates (stored in bcnam). Rotate the matrix into crystal coordinates.
 ! The rotated  matrix elements are stored in sx, where x means crytal coordinates.
 ! For these interactions, there are no subtypes and isorp = 0
-            
 
 ! Do nothing here - special case. Interaction already calculated in atm case.
             isorp = 0
@@ -802,7 +797,6 @@
 
 ! Allocate block size
             norb_nu = species(in3)%norb_max
-            
 
 ! bcnam = Hartree matrix in molecular coordinates
 ! dbcnam = derivative of Hartree matrix in molecular coordinates
@@ -815,7 +809,6 @@
 
             call getDMEs_Fdata_2c (in1, in3, interaction, isorp, z,          &
      &                             norb_mu, norb_nu, bcnam, dbcnam)
-            
 
 ! Note that if we are calculating the on-site matrix elements, then the
 ! derivatives should be exactly zero.  This is what Otto referred to as the

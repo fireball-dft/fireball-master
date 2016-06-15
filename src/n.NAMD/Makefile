@@ -1,13 +1,13 @@
-DOGS = M_bcna_3c_DOGS.o  M_dipole_z.o  M_vna_DOGS.o  M_vxc_McWEDA_DOGS.o
+NAMD=M_adiabatic.o M_non_adiabatic_gamma.o
 
-all: libthd_DOGS.a
+all: libthd_NAMD.a 
 
 .PHONY: clean
 
 clean:
 	rm -rf *.a *.o *.mod *genmod.o *~
 
-libthd_DOGS.a: $(DOGS)
+libthd_NAMD.a: $(NAMD)
 	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
 
 %.o: %.f90

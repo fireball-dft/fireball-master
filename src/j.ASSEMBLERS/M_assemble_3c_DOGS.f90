@@ -209,6 +209,9 @@
               end if
 
               cost = dot_product(sighat, rhat)
+              if (abs(cost) - 1.0d0 .lt. 0.010d0) then
+                cycle 
+              end if
               call epsilon_function (rhat, sighat, eps)
 
 ! Find the smoothing quantity - here we calculate the long-range effective

@@ -1,7 +1,7 @@
 ASSEMBLERS_BLOCKS = M_assemble_blocks.o
 ASSEMBLERS_PP = rotate_PP.o M_assemble_PP_3c.o M_assemble_PP_2c.o
-ASSEMBLERS_HARRIS =  M_assemble_2c_Harris.o M_assemble_3c_Harris.o M_assemble_ewald_Harris.o M_assemble_rho_McWEDA_Harris.o M_assemble_vxc_McWEDA_Harris.o M_assemble_usr_McWEDA_Harris.o
-ASSEMBLERS_DOGS = M_assemble_2c_DOGS.o M_assemble_3c_DOGS.o M_assemble_ewald_DOGS.o M_assemble_rho_McWEDA_DOGS.o M_assemble_vxc_McWEDA_DOGS.o M_assemble_usr_McWEDA_DOGS.o
+ASSEMBLERS_HARRIS =  M_assemble_2c_Harris.o M_assemble_3c_Harris.o M_assemble_ewald_Harris.o M_assemble_rho_McWEDA_Harris.o M_assemble_vxc_McWEDA_Harris.o M_assemble_usr_McWEDA_Harris.o M_assemble_ewald_Harris.o
+ASSEMBLERS_DOGS = M_assemble_2c_DOGS.o M_assemble_3c_DOGS.o M_assemble_ewald_DOGS.o M_assemble_rho_McWEDA_DOGS.o M_assemble_vxc_McWEDA_DOGS.o M_assemble_usr_McWEDA_DOGS.o M_assemble_ewald_DOGS.o
 ASSEMBLERS_KS = M_assemble_3c_Harris.o M_assemble_ewald_DOGS.o M_assemble_rho_McWEDA_DOGS.o
 
 

@@ -137,6 +137,12 @@
           ! vnl forces - add these together to vnl in the then
           real, allocatable :: vxc_off_site (:, :) ! atom case
           real, allocatable :: vxc_on_site (:, :)  ! atom case
+
+          !ewald forces
+          real, dimension (3) :: ewald
+          real, allocatable :: ewaldsr (:, :)
+          real, allocatable :: ewaldlr (:, :)
+
           ! three-center force terms for exchange-correlation interactions
           real, dimension (3) :: f3xca
           real, dimension (3) :: f3xcb

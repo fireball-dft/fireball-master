@@ -2,7 +2,7 @@ FDATA= M_Fdata_2c.o M_Fdata_3c.o
 FDATA_DOGS = M_Fdata_1c_McWEDA_DOGS.o
 FDATA_HARRIS = M_Fdata_1c_McWEDA_Harris.o
 
-all: libthd_FDATA.a
+all: libthd_FDATA.a libthd_FDATA_DOGS.a libthd_FDATA_HARRIS.a
 
 .PHONY: clean
 

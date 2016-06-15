@@ -1031,8 +1031,8 @@
                 d = d + drr
 
                 ! Set integration limits
-                zmin = max(-rcutoff1, d - rcutoff2)
-                zmax = min(rcutoff1, d + rcutoff2)
+                zmin = min(-rcutoff1, d - rcutoff2)
+                zmax = max(rcutoff1, d + rcutoff2)
 
                 call evaluate_integral_2c (nFdata_cell_2c, ispecies, jspecies,&
      &                                     isorp, ideriv, rcutoff1, rcutoff2, &
@@ -1324,8 +1324,8 @@
                 d = d + drr
 
                 ! Set integration limits
-                zmin = max(-rcutoff1, d - rcutoff2)
-                zmax = min(rcutoff1, d + rcutoff2)
+                zmin = min(-rcutoff1, d - rcutoff2)
+                zmax = max(rcutoff1, d + rcutoff2)
 
                 call evaluate_integral_2c (nFdata_cell_2c, ispecies, jspecies,&
      &                                     isorp, ideriv, rcutoff1, rcutoff2, &
@@ -1561,7 +1561,7 @@
 ! Find which grid point we are located:
         dmax = wf(ispecies)%rcutoffA_max + wf(jspecies)%rcutoffA_max
         drr = dmax/float(ndd_vxc - 1)
-        igrid = int(d/drr) + 1
+        igrid = int(d/drr + 0.6) + 1
 
 ! Set up pointer for which grid point:
         prho_bundle=>rho_2c_bundle(ispecies, jspecies)

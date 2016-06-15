@@ -46,7 +46,7 @@
 !
 ! Module Declaration
 ! ===========================================================================
-        module M_non_adiabatic
+        module M_adiabatic
 
 ! Type Declaration
 ! ===========================================================================
@@ -62,4 +62,4 @@
 
 ! End Module
 ! ===========================================================================
-        end module M_non_adiabatic
+        end module M_adiabatic

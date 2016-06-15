@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2012
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -100,11 +100,12 @@
 ! Initialize forces to zero
         do iatom = 1, s%natoms
           s%forces(iatom)%kinetic = 0.0d0
-          s%forces(iatom)%vna = 0.0d0
-          s%forces(iatom)%vnl = 0.0d0
           s%forces(iatom)%usr = 0.0d0
           s%forces(iatom)%pulay = 0.0d0
+          s%forces(iatom)%ewald = 0.0d0
+          s%forces(iatom)%vna = 0.0d0
           s%forces(iatom)%vxc = 0.0d0
+          s%forces(iatom)%vnl = 0.0d0
           s%forces(iatom)%f3naa = 0.0d0
           s%forces(iatom)%f3nab = 0.0d0
           s%forces(iatom)%f3nac = 0.0d0
@@ -174,7 +175,6 @@
         real    sumT
 
         real, dimension (3) :: r1, r2, r3 !< position of atoms
-!        real, dimension (3) :: Dpoverlap     !< vector derivative of poverlap in crystal coordinates !**
 
         type(T_assemble_block), pointer :: poverlap_neighbors
         type(T_assemble_neighbors), pointer :: poverlap
@@ -184,10 +184,10 @@
         type(T_assemble_neighbors), pointer :: pcapemat
         type(T_assemble_block), pointer :: pvna_neighbors
         type(T_assemble_neighbors), pointer :: pvna
-!       type(T_assemble_block), pointer :: pSR_neighbors
-!       type(T_assemble_neighbors), pointer :: pewaldsr
-!       type(T_assemble_block), pointer :: pLR_neighbors
-!       type(T_assemble_neighbors), pointer :: pewaldlr
+        type(T_assemble_block), pointer :: pSR_neighbors
+        type(T_assemble_neighbors), pointer :: pewaldsr
+        type(T_assemble_block), pointer :: pLR_neighbors
+        type(T_assemble_neighbors), pointer :: pewaldlr
         type(T_assemble_block), pointer :: pvxc_neighbors
         type(T_assemble_neighbors), pointer :: pvxc
 
@@ -213,8 +213,8 @@
           pkinetic=>s%kinetic(iatom)
           pcapemat=>s%capemat(iatom)
           pvna=>s%vna(iatom)
-!         pewaldsr=>ewaldsr(iatom)
-!         pewaldlr=>ewaldlr(iatom)
+          pewaldsr=>s%ewaldsr(iatom)
+          pewaldlr=>s%ewaldlr(iatom)
           pvxc=>s%vxc(iatom)
           pdenmat=>s%denmat(iatom)
           pfi=>s%forces(iatom)
@@ -229,6 +229,8 @@
           allocate (pfi%vna_ontop (3, num_neigh)); pfi%vna_ontop = 0.0d0
           allocate (pfi%vxc_off_site (3, num_neigh)); pfi%vxc_off_site = 0.0d0
           allocate (pfi%vxc_on_site (3, num_neigh)); pfi%vxc_on_site = 0.0d0
+          allocate (pfi%ewaldsr (3, num_neigh)); pfi%ewaldsr = 0.0d0
+          allocate (pfi%ewaldlr (3, num_neigh)); pfi%ewaldlr = 0.0d0
 
 ! Now loop over all neighbors ineigh of iatom.
           do ineigh = 1, num_neigh
@@ -242,8 +244,8 @@
             pK_neighbors=>pkinetic%neighbors(ineigh)
             pCape_neighbors=>pcapemat%neighbors(ineigh)
             pvna_neighbors=>pvna%neighbors(ineigh)
-!           pSR_neighbors=>pewaldsr%neighbors(ineigh)
-!           pLR_neighbors=>pewaldlr%neighbors(ineigh)
+            pSR_neighbors=>pewaldsr%neighbors(ineigh)
+            pLR_neighbors=>pewaldlr%neighbors(ineigh)
             pvxc_neighbors=>pvxc%neighbors(ineigh)
             pRho_neighbors=>pdenmat%neighbors(ineigh)
             pRho_neighbors_matom=>pdenmat%neighbors(matom)
@@ -251,7 +253,7 @@
 
 ! ****************************************************************************
 !
-!  ASSEMBLE T FORCES (TWO-CENTER)
+!  ASSEMBLE KINETIC FORCES (TWO-CENTER)
 ! ****************************************************************************
 ! The derivatives are tpx and, where p means derivative and x means crytal
 ! coordinates. The derivative is a vector in crystal
@@ -263,8 +265,7 @@
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
                   sumT = sumT                                                &
-                 + pRho_neighbors%block(imu,inu)*pK_neighbors%Dblock(ix,imu,inu)
-
+                   + pRho_neighbors%block(imu,inu)*pK_neighbors%Dblock(ix,imu,inu)
                 end do
               end do
 
@@ -278,7 +279,7 @@
 
 ! ****************************************************************************
 !
-!  ASSEMBLE Pulay corrections (TWO-CENTER)
+!  ASSEMBLE PULAY CORRECTIONS (TWO-CENTER)
 ! ****************************************************************************
 ! The derivatives are tpx and, where p means derivative and x means crytal
 ! coordinates. The derivative is a vector in crystal
@@ -290,7 +291,7 @@
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
                   sumT = sumT                                                &
-                  + pCape_neighbors%block(imu,inu)*poverlap_neighbors%Dblock(ix,imu,inu)
+                   + pCape_neighbors%block(imu,inu)*poverlap_neighbors%Dblock(ix,imu,inu)
                 end do
               end do
 
@@ -304,7 +305,7 @@
 
 ! ****************************************************************************
 !
-!  ASSEMBLE VNA ONTOP FORCES (TWO-CENTER)
+!  ASSEMBLE NEUTRAL ATOM (HARTREE) FOR TWO-CENTER ONTOP FORCE
 ! ****************************************************************************
 ! If r1 .ne. r2, then this is a case where the potential is located at one of
 ! the sites of a wavefunction (ontop case).
@@ -318,14 +319,14 @@
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
                   pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)          &
-     &              - pRho_neighbors%block(imu,inu)*pvna_neighbors%Dblocko(:,imu,inu)*P_eq2
+     &             - pRho_neighbors%block(imu,inu)*pvna_neighbors%Dblocko(:,imu,inu)*P_eq2
                 end do
               end do
             end if
 
 ! ****************************************************************************
 !
-! ASSEMBLE NEUTRAL ATOM FORCE FOR ATOM CASE (TWO-CENTER)
+! ASSEMBLE NEUTRAL ATOM (HARTREE) FOR TWO-CENTER ATOM FORCE
 ! ****************************************************************************
 ! The vna 2 centers are: ontop (L), ontop (R), and atm.
 ! First, do vna_atom case. Here we compute <i | v(j) | i> matrix elements.
@@ -334,42 +335,34 @@
 ! same site, but the potential vna is at a different site (atm case).
 ! The derivative wrt the "atom r1" position (not the NA position) are
 ! stored in bcnapx.
-!
-! Form the "force-like" derivative of the atom terms for NA,
-! or -(d/dr1) <phi(mu,r-r1)!h(r-ratm)!phi(nu,r-r1)>.
 
 ! Note that the loop below involves num_orb(in1) ONLY. Why?
 ! Because the potential is somewhere else (or even at iatom), but we are
 ! computing the vna_atom term, i.e. < phi(i) | v | phi(i) > but V=v(j) )
 ! interactions.
+
+! Form the "force-like" derivative of the atom terms for NA,
+! or -(d/dr1) <phi(mu,r-r1)!h(r-ratm)!phi(nu,r-r1)>.
 
 ! Notice the explicit negative sign, this makes it force like.
             do inu = 1, norb_mu
               do imu = 1, norb_mu
                 pfi%vna_atom(:,ineigh) = pfi%vna_atom(:,ineigh)              &
-     &            - pRho_neighbors_matom%block(imu,inu)*pvna_neighbors%Dblock(:,imu,inu)*P_eq2
+     &           - pRho_neighbors_matom%block(imu,inu)*pvna_neighbors%Dblock(:,imu,inu)*P_eq2
               end do
             end do
 
 ! ****************************************************************************
 !
-! ASSEMBLE EXANGE CORRELATION FORCE FOR 2 CENTER CASE (TWO-CENTER)
+! ASSEMBLE EXCHANGE-CORRELATION TWO-CENTER FORCE
 ! ****************************************************************************
-! The vna 2 centers are: ontop (L), ontop (R), and atm.
-! First, do vna_atom case. Here we compute <i | v(j) | i> matrix elements.
+! The vxc two-center forces are: vxc_on_site and vxc_off_site.
 !
-! If r1 = r2, then this is a case where the two wavefunctions are at the
-! same site, but the potential vna is at a different site (atm case).
-! The derivative wrt the "atom r1" position (not the NA position) are
-! stored in bcnapx.
+! If r1 = r2, then this is a case of the self-interaction term or the
+! one center term which has no force.
 !
-! Form the "force-like" derivative of the atom terms for NA,
+! Form the "force-like" derivative of the atom terms for vxc,
 ! or -(d/dr1) <phi(mu,r-r1)!h(r-ratm)!phi(nu,r-r1)>.
-
-! Note that the loop below involves num_orb(in1) ONLY. Why?
-! Because the potential is somewhere else (or even at iatom), but we are
-! computing the vna_atom term, i.e. < phi(i) | v | phi(i) > but V=v(j) )
-! interactions.
 
 ! Notice the explicit negative sign, this makes it force like.
             if (iatom .eq. jatom .and. mbeta .eq. 0) then
@@ -379,24 +372,64 @@
             else
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
-                  pfi%vxc_off_site(:,ineigh) = pfi%vxc_off_site(:,ineigh)              &
-     &              - pRho_neighbors%block(imu,inu)*pvxc_neighbors%Dblock(:,imu,inu)
+                  pfi%vxc_off_site(:,ineigh) = pfi%vxc_off_site(:,ineigh)    &
+     &             - pRho_neighbors%block(imu,inu)*pvxc_neighbors%Dblock(:,imu,inu)
                 end do
               end do
             end if
 
+! Note that the loop below involves num_orb(in1) ONLY. Why?
+! Because the potential is somewhere else (or even at iatom), but we are
+! computing the vxc_on_site term, i.e. < phi(i) | v | phi(i) > but V=v(j) )
+! interactions.
             do inu = 1, norb_mu
               do imu = 1, norb_mu
-                pfi%vxc_on_site(:,ineigh) = pfi%vxc_on_site(:,ineigh)              &
-     &              - pRho_neighbors_matom%block(imu,inu)*pvxc_neighbors%Dblocko(:,imu,inu)
+                pfi%vxc_on_site(:,ineigh) = pfi%vxc_on_site(:,ineigh)        &
+     &           - pRho_neighbors_matom%block(imu,inu)*pvxc_neighbors%Dblocko(:,imu,inu)
               end do
             end do
+
+! ****************************************************************************
+!
+!  ASSEMBLE EWALD (TWO-CENTER) FORCES
+! ****************************************************************************
+! The Ewald two-center forces are: ewaldsr and ewaldlr.
+!
+! If r1 = r2, then this is a case of the self-interaction term or the
+! one center term which has no force.
+!
+! Form the "force-like" derivative of the atom terms for vxc,
+! or -(d/dr1) <phi(mu,r-r1)!h(r-ratm)!phi(nu,r-r1)>.
+
+! Notice the explicit negative sign, this makes it force like.
+            if (iatom .eq. jatom .and. mbeta .eq. 0) then
+
+! Do nothing here - special self-interaction case.
+
+            else
+! short-range part ewaldsr
+              do inu = 1, norb_nu
+                do imu = 1, norb_mu
+                  pfi%ewaldsr(:,ineigh) = pfi%ewaldsr(:,ineigh)              &
+     &             - 0.5d0*pRho_neighbors%block(imu,inu)*pSR_neighbors%Dblock(:,imu,inu)
+! Note - remove the 0.5d0 and make sure it gets into the Dassembler - I add it here
+! because the 0.5d0 was here in the original assemble_F.f90 routine.
+                end do
+              end do
+! long-range part ewaldsr
+              do inu = 1, norb_nu
+                do imu = 1, norb_mu
+                  pfi%ewaldlr(:,ineigh) = pfi%ewaldlr(:,ineigh)              &
+     &             - pRho_neighbors%block(imu,inu)*pLR_neighbors%Dblock(:,imu,inu)
+                end do
+              end do
+            end if
           end do ! end loop over neighbors
         end do ! end loop over atoms
 
 ! ****************************************************************************
 !
-!  ASSEMBLE VNA and VXC FORCES (THREE-CENTER)
+!  ASSEMBLE VNA and VXC THREE-CENTER FORCES
 ! ****************************************************************************
 ! The terms f3naXa, f3naXb, and f3naXc are already force-like.
         do ialpha = 1, s%natoms
@@ -468,14 +501,12 @@
 ! ****************************************************************************
 ! Kinetic contribution to Total Force
 ! ****************************************************************************
-          pfi%ftot = pfi%ftot + pfi%kinetic  ! force like
-!(-1.0d0) for all the terms Arturo
+          pfi%ftot = pfi%ftot + pfi%kinetic
 
 ! ****************************************************************************
 ! Pulay contribution to Total Force
 ! ****************************************************************************
-          pfi%ftot = pfi%ftot  - pfi%pulay !force like
-!(-1.0d0) for all the terms Arturo
+          pfi%ftot = pfi%ftot - pfi%pulay
 
 ! ****************************************************************************
 ! Short-range (double-counting) contribution to Total Force
@@ -483,12 +514,12 @@
           pfi%ftot = pfi%ftot + pfi%usr
 
 ! ****************************************************************************
-! vna 3 center contribution to the toal force
+! vna three-center contribution to the toal force
 ! ****************************************************************************
           pfi%ftot = pfi%ftot + pfi%f3naa + pfi%f3nab + pfi%f3nac
 
 ! ****************************************************************************
-! vxc 3 center contribution to the toal force
+! vxc three-center contribution to the toal force
 ! ****************************************************************************
           pfi%ftot = pfi%ftot + pfi%f3xca + pfi%f3xcb + pfi%f3xcc
 
@@ -503,11 +534,10 @@
             pfj => s%forces(jatom)
 
 ! ****************************************************************************
-! Vna contribution to Total Force
+! vna contribution to Total Force
 ! ****************************************************************************
 ! neutral atom forces - atm case
-            pfi%vna = pfi%vna + pfi%vna_atom(:,ineigh) ! here to Arturo
-!(-1.0d0)
+            pfi%vna = pfi%vna + pfi%vna_atom(:,ineigh)
             pfj%vna = pfj%vna - pfi%vna_atom(:,ineigh)
 
             pfi%ftot = pfi%ftot + pfi%vna_atom(:,ineigh)
@@ -522,12 +552,39 @@
             pfi%ftot = pfi%ftot + pfi%vna_ontop(:,ineigh)
             pfj%ftot = pfj%ftot - pfi%vna_ontop(:,ineigh)
 
+! ****************************************************************************
+! vxc contribution to Total Force
+! ****************************************************************************
+! off site interactions
+            pfi%vxc = pfi%vxc + pfi%vxc_off_site(:,ineigh)
+            pfj%vxc = pfj%vxc - pfi%vxc_off_site(:,ineigh)
+            
+            pfi%ftot = pfi%ftot + pfi%vxc_off_site(:,ineigh)
+            pfj%ftot = pfj%ftot - pfi%vxc_off_site(:,ineigh)
 
-            pfi%ftot = pfi%ftot + pfi%vxc_off_site(:,ineigh) !arturo
-            pfj%ftot = pfj%ftot - pfi%vxc_off_site(:,ineigh) !arturo
+! on site interactions
+            pfi%vxc = pfi%vxc + pfi%vxc_on_site(:,ineigh)
+            pfj%vxc = pfj%vxc - pfi%vxc_on_site(:,ineigh)
 
-            pfi%ftot = pfi%ftot + pfi%vxc_on_site(:,ineigh) !arturo
-            pfj%ftot = pfj%ftot - pfi%vxc_on_site(:,ineigh) !arturo
+            pfi%ftot = pfi%ftot + pfi%vxc_on_site(:,ineigh)
+            pfj%ftot = pfj%ftot - pfi%vxc_on_site(:,ineigh)
+
+! ****************************************************************************
+! Ewald contribution to Total Force
+! ****************************************************************************
+! ewaldsr interactions
+            pfi%ewald = pfi%ewald - pfi%ewaldsr(:,ineigh)
+            pfj%ewald = pfj%ewald + pfi%ewaldsr(:,ineigh)
+
+            pfi%ftot = pfi%ftot - pfi%ewaldsr(:,ineigh)
+            pfj%ftot = pfj%ftot + pfi%ewaldsr(:,ineigh)
+
+! ewaldlr interactions
+            pfi%ewald = pfi%ewald - pfi%ewaldlr(:,ineigh)
+            pfj%ewald = pfj%ewald + pfi%ewaldlr(:,ineigh)
+
+            pfi%ftot = pfi%ftot - pfi%ewaldlr(:,ineigh)
+            pfj%ftot = pfj%ftot + pfi%ewaldlr(:,ineigh)
           end do ! end loop over neighbors
         end do ! end loop over atoms
 
@@ -659,27 +716,47 @@
         end do
         write (logfile,100)
 
+        write (logfile,100)
+        write (logfile,*)
+        write (logfile,103) 'The exchange correlation (vxc) force: '
+        write (logfile,100)  
+        write (logfile,101)
+        write (logfile,100)
+        do iatom = 1, s%natoms
+          write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%vxc
+        end do
+        write (logfile,100)
+
+        write (logfile,100)
+        write (logfile,*)
+        write (logfile,103) 'The long-range electrostatics (ewald) force: '
+        write (logfile,100)
+        write (logfile,101)
+        write (logfile,100)
+        do iatom = 1, s%natoms
+          write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%ewald
+        end do
+        write (logfile,100)
+
         write (logfile,*)
         write (logfile,103) 'The short-range (double-counting) (usr) force: '
-        write (logfile,100)
+        write (logfile,100) 
         write (logfile,101)
         write (logfile,100)
         do iatom = 1, s%natoms
           write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%usr
         end do
-        write (logfile,100)
-
+        
 ! Deallocate Arrays
 ! ===========================================================================
 ! None
 
 ! Format Statements
 ! ===========================================================================
-
 100     format (4x, 70('='))
 101     format (4x, 'Atom # ', 2x, ' Type ', 5x,   &
      &              ' x ', 9x, ' y ', 9x, ' z ')
-102     format (4x, i5, 7x, a2, 3(2x,ES10.3))
+102     format (4x,  i5, 7x, a2, 3(2x,ES10.3))
 103     format (4x, A)
 
 

@@ -44,7 +44,6 @@
         use M_assemble_blocks
         use M_configuraciones
         use M_Fdata_2c
-!       use M_rotations
         use M_Drotations_PP
 
 ! Type Declaration
@@ -113,7 +112,7 @@
 ! ===========================================================================
 ! Initialize logfile
         logfile = s%logfile
-!        write (logfile,*) ' Density matrix for VNL elements... '
+        write (logfile,*) ' Density matrix for VNL elements... '
 
 ! ****************************************************************************
 !
@@ -126,9 +125,8 @@
           pdenmat=>s%denmat_PP(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
-          norb_mu = species(in1)%norb_max!norb_mu = species(in1)%norb_max
+          norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors_PP(iatom)%neighn
-          !print *, num_neigh, 'num_neigh_pp at comp dens'
           allocate (pdenmat%neighbors(num_neigh))
 
 ! Loop over the neighbors of each iatom.
@@ -141,7 +139,7 @@
             in2 = s%atom(jatom)%imass
 
 ! Allocate the block size
-            norb_nu = species(in2)%norb_max!norb_nu = species(in2)%norb_max
+            norb_nu = species(in2)%norb_max
             allocate (pRho_neighbors%block(norb_mu, norb_nu))
             pRho_neighbors%block = 0.0d0
 
@@ -179,6 +177,11 @@
               end do
 
 ! Finish loop over k-points.
+            end do
+ 
+            write (*,*) ' iatom, ineigh, jatom = ', iatom, ineigh, jatom
+            do imu = 1, species(in1)%norb_max
+              write (*,*) (pRho_neighbors%block(imu,inu), inu = 1, species(in2)%norb_max)
             end do
 
 ! Finish loop over atoms and neighbors.
@@ -476,19 +479,16 @@
 ! Procedure
 ! ===========================================================================
 ! ASSEMBLE VNL ATM CASE  <phi_i|Psi_j><Psi_j|phi_i>
-        !call densityPP_matrix (s)
         do iatom = 1, s%natoms
           ! cut some lengthy notation
           psvnl=>s%svnl(iatom)
           pdenmat=>s%denmat_PP(iatom)
           pfi=>s%forces(iatom)
-          call densityPP_matrix (s)
           in1 = s%atom(iatom)%imass
-          norb_mu = species(in1)%norb_max !no PP
-          matom = s%neighbors_PPp_self(iatom)
-          !matom = s%neigh_self(iatom)
+          norb_mu = species(in1)%norb_max ! do not use PP here
+          matom = s%neighbors_PP_self(iatom)
           num_neigh = s%neighbors_PP(iatom)%neighn
-          !print *, matom, iatom,  num_neigh, 'matom, iatom, num_neigh_pp'
+
 ! allocate force terms and initialize to zero
           allocate (pfi%vnl_atom (3, num_neigh)); pfi%vnl_atom = 0.0d0
           allocate (pfi%vnl_ontop (3, num_neigh)); pfi%vnl_ontop = 0.0d0
@@ -498,12 +498,12 @@
             mbeta = s%neighbors_PP(iatom)%neigh_b(ineigh)
             jatom = s%neighbors_PP(iatom)%neigh_j(ineigh)
             in2 = s%atom(jatom)%imass
-            norb_nu = species(in1)%norb_PP_max
+            norb_nu = species(in2)%norb_max ! do not use PP here
 
             ! cut some lengthy notation
             psvnl_neighbors=>psvnl%neighbors(ineigh)
-            !pRho_neighbors_matom=>pdenmat%neighbors(ineigh)
             pRho_neighbors_matom=>pdenmat%neighbors(matom)  
+
 ! Get the coefficients
 ! We now loop though all shells, and create cl for each orbital.  For example,
 ! sp^3 has two shells; cl(1) = cl_PP(0) and cl(2) = cl(3) = cl(4) = cl_PP(1).
@@ -513,7 +513,6 @@
 ! Now we combine and sum:
 ! in1 twice because it is an atom case.
             allocate (PPx (3, norb_mu, norb_mu)); PPx = 0.0d0
-            !print *, norb_mu, 
             do inu = 1, norb_mu
               do imu = 1, norb_mu
                 do ncc = 1, species(in2)%norb_PP_max
@@ -616,6 +615,7 @@
 ! Mapping to the global matrix
               kneigh = s%neighbors_PPx(iatom)%map(ineigh)
               pRho_neighbors=>pdenmat%neighbors(kneigh)
+              write (*,*) ' iatom, jatom, ineigh, kneigh = ', iatom, jatom, ineigh, kneigh
 
 ! If r1 = r2, then this is a case where the two wavefunctions are at the
 ! same site, but the potential vna is at a different site (atm case).
@@ -629,6 +629,12 @@
 ! Because the potential is somewhere else (or even at iatom), but we are
 ! computing the vna_atom term, i.e. < phi(i) | v | phi(i) > but V=v(j) )
 ! interactions.
+
+           write (*,*) ' Writing density matrix for Dassemble_PP interactions: '
+           write (*,*) ' iatom, ineigh = ', iatom, ineigh
+           do imu = 1, norb_mu
+             write (*,*) (pRho_neighbors%block(imu,inu), inu = 1, norb_nu)
+           end do
 
 ! Notice the explicit negative sign, this makes it force like.
               do inu = 1, norb_nu

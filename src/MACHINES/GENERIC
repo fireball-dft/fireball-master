@@ -44,7 +44,7 @@ ifneq (,$(findstring GENERIC, ${MACHINE}))
 		ifneq (,$(findstring MKL, ${LINALG}))
 		      FFLAGS = -O2 -fdefault-real-8 -m64 -I$(MKLROOT)/include
 		      ifneq (,$(findstring DEBUG, ${MODE}))
-		      FFLAGS = -fdefault-real-8 -g -fbounds-check -Wcharacter-truncation -m64 -I$(MKLROOT)/include
+		      FFLAGS = -fdefault-real-8 -g -fbounds-check -Wall -Wcharacter-truncation -m64 -I$(MKLROOT)/include
 		      endif
 
 		      ifneq (,$(findstring YES,${OPENMP}))
@@ -58,7 +58,7 @@ ifneq (,$(findstring GENERIC, ${MACHINE}))
 		      LFLAGS =  -Wl,--no-as-needed -L${MKLROOT}/lib/intel64 -lmkl_gf_lp64 -lmkl_core -lmkl_sequential -lpthread -lm
 		      LFLAGS_FFT = -I$(FFTPATH) -L$(MKLPATH) $(MKLPATH)/libfftw3xf_intel.a \
 		      $(MKLPATH)/libmkl_em64t.a -Bdynamic $(MKLPATH)/libguide.a
-		      LFLAGS_FFT =
+		      LFLAGS_FFT = 
 		endif
 
 		ifneq (,$(findstring LAPACK, ${LINALG}))
@@ -72,7 +72,7 @@ ifneq (,$(findstring GENERIC, ${MACHINE}))
 		      endif
 
 		      LFLAGS = -L/usr/lib64 -llapack -lblas -lpthread -lm
-		      LFLAGS_FFT = 
+		      LFLAGS_FFT = -lfftw3
 		endif
 
 

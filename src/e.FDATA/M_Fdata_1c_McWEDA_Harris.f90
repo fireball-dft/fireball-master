@@ -120,7 +120,7 @@
 ! ===========================================================================
         integer ispecies                          !< counter for number of species
         integer nssh                              !< counters for number of shells
-        integer issh, jssh, kssh
+        integer issh, jssh !, kssh
 
         character (len=32) filename
 

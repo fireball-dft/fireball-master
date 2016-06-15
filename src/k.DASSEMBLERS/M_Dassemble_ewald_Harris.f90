@@ -41,10 +41,12 @@
 !! located in the Fdata directory.  This list will change depending on
 !! the datafiles included there. This list is an output from running create.x
 ! ===========================================================================
-        module M_assemble_ewald
+        module M_Dassemble_ewald
         use M_assemble_blocks
         use M_configuraciones
         use M_Fdata_2c
+        use M_rotations
+        use M_Drotations
 
 ! Type Declaration
 ! ===========================================================================
@@ -59,7 +61,7 @@
 
 
 ! ===========================================================================
-! assemble_ewaldsr.f90
+! Dassemble_ewaldsr.f90
 ! ===========================================================================
 ! Subroutine Description
 ! ===========================================================================
@@ -79,7 +81,7 @@
 !
 ! Program Declaration
 ! ===========================================================================
-        subroutine assemble_ewaldsr (s)
+        subroutine Dassemble_ewaldsr (s)
         implicit none
 
 ! Argument Declaration and Description
@@ -101,6 +103,8 @@
 
         type(T_assemble_block), pointer :: pSR_neighbors
         type(T_assemble_neighbors), pointer :: pewaldsr
+        type(T_assemble_block), pointer :: pLR_neighbors
+        type(T_assemble_neighbors), pointer :: pewaldlr        
 
 ! Allocate Arrays
 ! ===========================================================================
@@ -112,6 +116,7 @@
         do iatom = 1, s%natoms
           ! cut some lengthy notation
           pewaldsr=>s%ewaldsr(iatom)
+          pewaldlr=>s%ewaldlr(iatom)
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
@@ -121,13 +126,16 @@
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             ! cut some more lengthy notation
             pSR_neighbors=>pewaldsr%neighbors(ineigh)
+            pLR_neighbors=>pewaldlr%neighbors(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             in2 = s%atom(jatom)%imass
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
-            allocate (pSR_neighbors%block(norb_mu, norb_nu))
-            pSR_neighbors%block = 0.0d0
+            allocate (pSR_neighbors%Dblock(3, norb_mu, norb_nu))
+             allocate (pLR_neighbors%Dblock(3, norb_mu, norb_nu))
+            pSR_neighbors%Dblock = 0.0d0
+            pLR_neighbors%Dblock = 0.0d0
 
           end do ! end loop over neighbors
         end do ! end loop over atoms
@@ -143,11 +151,11 @@
 ! End Subroutine
 ! ===========================================================================
         return
-        end subroutine assemble_ewaldsr
+        end subroutine Dassemble_ewaldsr
 
 
 ! ===========================================================================
-! assemble_ewaldlr.f90
+! Dassemble_ewaldlr.f90
 ! ===========================================================================
 ! Subroutine Description
 ! ===========================================================================
@@ -167,7 +175,7 @@
 !
 ! Program Declaration
 ! ===========================================================================
-        subroutine assemble_ewaldlr (s)
+        subroutine Dassemble_ewaldlr (s)
         implicit none
 
 ! Argument Declaration and Description
@@ -215,8 +223,8 @@
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
-            allocate (pLR_neighbors%block(norb_mu, norb_nu))
-            pLR_neighbors%block = 0.0d0
+            allocate (pLR_neighbors%Dblock(3, norb_mu, norb_nu))
+            pLR_neighbors%Dblock = 0.0d0
 
           end do ! end loop over neighbors
         end do ! end loop over atoms
@@ -232,7 +240,7 @@
 ! End Subroutine
 ! ===========================================================================
         return
-        end subroutine assemble_ewaldlr
+        end subroutine Dassemble_ewaldlr
 
 
 ! ===========================================================================
@@ -256,7 +264,7 @@
 !
 ! Subroutine Declaration
 ! ===========================================================================
-        subroutine destroy_assemble_ewald (s)
+        subroutine destroy_Dassemble_ewald (s)
         implicit none
 
 ! Argument Declaration and Description
@@ -276,8 +284,8 @@
 ! ===========================================================================
         do iatom = 1, s%natoms
           do ineigh = 1, s%neighbors(iatom)%neighn
-            deallocate (s%ewaldsr(iatom)%neighbors(ineigh)%block)
-            deallocate (s%ewaldlr(iatom)%neighbors(ineigh)%block)
+            deallocate (s%ewaldsr(iatom)%neighbors(ineigh)%Dblock)
+            deallocate (s%ewaldlr(iatom)%neighbors(ineigh)%Dblock)
           end do
           deallocate (s%ewaldsr(iatom)%neighbors)
           deallocate (s%ewaldlr(iatom)%neighbors)
@@ -296,8 +304,8 @@
 ! End Subroutine
 ! ===========================================================================
         return
-        end subroutine destroy_assemble_ewald
+        end subroutine destroy_Dassemble_ewald
 
 ! End Module
 ! ===========================================================================
-        end module M_assemble_ewald
+        end module M_Dassemble_ewald
