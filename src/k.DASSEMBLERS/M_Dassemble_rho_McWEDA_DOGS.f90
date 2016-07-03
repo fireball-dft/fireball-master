@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2012
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -487,7 +487,7 @@
         real x, cost                     !< dnabc and angle
  
         real, dimension (3, 3) :: eps     !< the epsilon matrix
-!        real, dimension (3, 3, 3) :: deps !< derivative of epsilon matrix
+!       real, dimension (3, 3, 3) :: deps !< derivative of epsilon matrix
         real, dimension (3) :: r1, r2, r3, r12, r21   !< positions
         real, dimension (3) :: sighat     !< unit vector along r2 - r1
         real, dimension (3) :: rhat       !< unit vector along bc - r3
@@ -537,6 +537,7 @@
         do ialpha = 1, s%natoms
           in3 = s%atom(ialpha)%imass
           r3 = s%atom(ialpha)%ratom
+
           ! loop over the common neigbor pairs of ialp
           do ineigh = 1, s%neighbors(ialpha)%ncommon
             mneigh = s%neighbors(ialpha)%neigh_common(ineigh)
@@ -557,19 +558,18 @@
               norb_nu = species(in2)%norb_max
               
 ! Allocade DFdata blocks
-              allocate (prho_in_neighbors%aDblock(3, norb_mu, norb_nu))
-              prho_in_neighbors%aDblock = 0.00
-              allocate (prho_in_neighbors%bDblock(3, norb_mu, norb_nu)) 
-              prho_in_neighbors%bDblock = 0.00
-              allocate (prho_in_neighbors%cDblock(3, norb_mu, norb_nu))
-              prho_in_neighbors%cDblock = 0.00
+              allocate (prho_in_neighbors%Dblocka(3, norb_mu, norb_nu))
+              allocate (prho_in_neighbors%Dblockb(3, norb_mu, norb_nu))
+              allocate (prho_in_neighbors%Dblockc(3, norb_mu, norb_nu))
+              prho_in_neighbors%Dblocka = 0.00
+              prho_in_neighbors%Dblockb = 0.00
+              prho_in_neighbors%Dblockc = 0.00
 
 ! SET-UP STUFF
 ! ***************************************************************************
 ! Find r21 = vector pointing from r1 to r2, the two ends of the bondcharge.
 ! This gives us the distance dbc (or y value in the 2D grid).
               r21 = r2 - r1
-              
               z = distance (r1, r2)
 
               ! unit vector in sigma direction.
@@ -596,9 +596,7 @@
                 rhat = (r3 - 0.5d0*(r1 + r2))/x
               end if
               cost = dot_product(sighat, rhat)
-              if (abs(cost) - 1.0d0 .lt. 0.010d0) then                
-                cycle
-              end if              
+
               call epsilon_function (rhat, sighat, eps)
               call Depsilon_3c (r1, r2, r21, z, r3, rhat, eps, depsA, depsB)
 
@@ -694,12 +692,9 @@
                 vdxcXb(:,:,:) = - vdxcXb(:,:,:)
                 vdxcXc(:,:,:) = - vdxcXa(:,:,:) - vdxcXb(:,:,:)
 
-                prho_in_neighbors%aDblock = prho_in_neighbors%aDblock        &
-     &                                     + vdxcXa*Qin
-                prho_in_neighbors%bDblock = prho_in_neighbors%bDblock        &
-     &                                     + vdxcXb*Qin
-                prho_in_neighbors%cDblock = prho_in_neighbors%cDblock        &
-     &                                     + vdxcXc*Qin
+                prho_in_neighbors%Dblocka = prho_in_neighbors%Dblocka + vdxcXa*Qin
+                prho_in_neighbors%Dblockb = prho_in_neighbors%Dblockb + vdxcXb*Qin
+                prho_in_neighbors%Dblockc = prho_in_neighbors%Dblockc + vdxcXc*Qin
               end do ! isubtype = 1, species(in3)%nssh
 
               deallocate (bcxcm, bcxcx, dpbcxcm, dxbcxcm, dybcxcm)
@@ -1167,21 +1162,14 @@
               r2 = s%atom(jatom)%ratom + s%xl(jbeta)%a
               in2 = s%atom(jatom)%imass
               nssh_j = species(in2)%nssh
-! Allocade DFdata blocks
-              allocate (prho_in_neighbors_weighted%aDblock(3, nssh_i, nssh_j))
-              prho_in_neighbors_weighted%aDblock = 0.00
-              allocate (prho_in_neighbors_weighted%bDblock(3, nssh_i, nssh_j))
-              prho_in_neighbors_weighted%bDblock = 0.00
-              allocate (prho_in_neighbors_weighted%cDblock(3, nssh_i, nssh_j))
-              prho_in_neighbors_weighted%cDblock = 0.00              
 
-! Allocate DFdata blocks
-              allocate (prho_in_neighbors_weighted%aDblock(3, nssh_i, nssh_j))
-              prho_in_neighbors_weighted%aDblock = 0.00
-              allocate (prho_in_neighbors_weighted%bDblock(3, nssh_i, nssh_j))
-              prho_in_neighbors_weighted%bDblock = 0.00
-              allocate (prho_in_neighbors_weighted%cDblock(3, nssh_i, nssh_j))
-              prho_in_neighbors_weighted%cDblock = 0.00
+! Allocade DFdata blocks
+              allocate (prho_in_neighbors_weighted%Dblocka(3, nssh_i, nssh_j))
+              allocate (prho_in_neighbors_weighted%Dblockb(3, nssh_i, nssh_j))
+              allocate (prho_in_neighbors_weighted%Dblockc(3, nssh_i, nssh_j))
+              prho_in_neighbors_weighted%Dblocka = 0.0d0
+              prho_in_neighbors_weighted%Dblockb = 0.0d0
+              prho_in_neighbors_weighted%Dblockc = 0.0d0
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -1213,11 +1201,8 @@
               else
                 rhat = (r3 - 0.5d0*(r1 + r2))/x
               end if
-
               cost = dot_product(sighat, rhat)
-              if (abs(cost) - 1.0d0 .lt. 0.010d0) then                
-                cycle
-              end if              
+
               call epsilon_function (rhat, sighat, eps)
               call Depsilon_3c (r1, r2, r21, z, r3, rhat, eps, depsA, depsB)
 
@@ -1264,12 +1249,12 @@
                    end do ! jssh
                 end do ! issh
                  
-                prho_in_neighbors_weighted%aDblock =                         &
-     &            prho_in_neighbors_weighted%aDblock + vdxcMa*Qin
-                prho_in_neighbors_weighted%bDblock =                         &
-     &            prho_in_neighbors_weighted%bDblock + vdxcMb*Qin
-                prho_in_neighbors_weighted%cDblock =                         &
-     &            prho_in_neighbors_weighted%cDblock + vdxcMc*Qin
+                prho_in_neighbors_weighted%Dblocka =                         &
+     &            prho_in_neighbors_weighted%Dblocka + vdxcMa*Qin
+                prho_in_neighbors_weighted%Dblockb =                         &
+     &            prho_in_neighbors_weighted%Dblockb + vdxcMb*Qin
+                prho_in_neighbors_weighted%Dblockc =                         &
+     &            prho_in_neighbors_weighted%Dblockc + vdxcMc*Qin
                   
               deallocate (bcxcm, bcxcx, dpbcxcm, dxbcxcm, dybcxcm)
               deallocate (vdxcMa, vdxcMb, vdxcMc)
@@ -1337,12 +1322,12 @@
         do iatom = 1, s%natoms
           do ineigh = 1, s%neighbors(iatom)%ncommon
             mneigh = s%neighbors(iatom)%neigh_common(ineigh)
-            deallocate (s%rho_in(iatom)%neighbors(mneigh)%aDblock)
-            deallocate (s%rho_in(iatom)%neighbors(mneigh)%bDblock)
-            deallocate (s%rho_in(iatom)%neighbors(mneigh)%cDblock)
-            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%aDblock)
-            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%bDblock)
-            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%cDblock)
+            deallocate (s%rho_in(iatom)%neighbors(mneigh)%Dblocka)
+            deallocate (s%rho_in(iatom)%neighbors(mneigh)%Dblockb)
+            deallocate (s%rho_in(iatom)%neighbors(mneigh)%Dblockc)
+            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblocka)
+            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblockb)
+            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblockc)
           end do  
         end do
 

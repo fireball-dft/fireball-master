@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2012
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -475,7 +475,7 @@
         integer ineigh, mneigh           !< counter over neighbors
         integer in1, in2, in3            !< species numbers
         integer isubtype                 !< which subtype
-!        integer interaction, isorp       !< which interaction and subtype
+!       integer interaction, isorp       !< which interaction and subtype
         integer ix, iindex
 
         integer norb_mu, norb_nu         !< size of the block for the pair
@@ -485,7 +485,7 @@
         real x, cost                     !< dnabc and angle
  
         real, dimension (3, 3) :: eps     !< the epsilon matrix
-!        real, dimension (3, 3, 3) :: deps !< derivative of epsilon matrix
+!       real, dimension (3, 3, 3) :: deps !< derivative of epsilon matrix
         real, dimension (3) :: r1, r2, r3, r12, r21   !< positions
         real, dimension (3) :: sighat     !< unit vector along r2 - r1
         real, dimension (3) :: rhat       !< unit vector along bc - r3
@@ -535,7 +535,8 @@
         do ialpha = 1, s%natoms
           in3 = s%atom(ialpha)%imass
           r3 = s%atom(ialpha)%ratom
-          ! loop over the common neigbor pairs of ialp
+
+          ! loop over the common neighbor pairs of ialpha
           do ineigh = 1, s%neighbors(ialpha)%ncommon
             mneigh = s%neighbors(ialpha)%neigh_common(ineigh)
             if (mneigh .ne. 0) then
@@ -544,27 +545,29 @@
               r1 = s%atom(iatom)%ratom + s%xl(ibeta)%a
               in1 = s%atom(iatom)%imass
               norb_mu = species(in1)%norb_max
-              
-              prho_in=>s%rho_in(iatom)
-              prho_in_neighbors=>prho_in%neighbors(mneigh)
-              
+
               jatom = s%neighbors(ialpha)%jatom_common_j(ineigh)
               jbeta = s%neighbors(ialpha)%jatom_common_b(ineigh)
               r2 = s%atom(jatom)%ratom + s%xl(jbeta)%a
               in2 = s%atom(jatom)%imass
               norb_nu = species(in2)%norb_max
+
+              ! cut some lengthy notation
+              prho_in=>s%rho_in(iatom); prho_in_neighbors=>prho_in%neighbors(mneigh)
               
 ! Allocade DFdata blocks
-              allocate (prho_in_neighbors%aDblock(3, norb_mu, norb_nu)); prho_in_neighbors%aDblock = 0.00
-              allocate (prho_in_neighbors%bDblock(3, norb_mu, norb_nu)); prho_in_neighbors%bDblock = 0.00
-              allocate (prho_in_neighbors%cDblock(3, norb_mu, norb_nu)); prho_in_neighbors%cDblock = 0.00
+              allocate (prho_in_neighbors%Dblocka(3, norb_mu, norb_nu))
+              allocate (prho_in_neighbors%Dblockb(3, norb_mu, norb_nu))
+              allocate (prho_in_neighbors%Dblockc(3, norb_mu, norb_nu))
+              prho_in_neighbors%Dblocka = 0.00
+              prho_in_neighbors%Dblockb = 0.00
+              prho_in_neighbors%Dblockc = 0.00
 
 ! SET-UP STUFF
 ! ***************************************************************************
 ! Find r21 = vector pointing from r1 to r2, the two ends of the bondcharge.
 ! This gives us the distance dbc (or y value in the 2D grid).
               r21 = r2 - r1
-              
               z = distance (r1, r2)
 
               ! unit vector in sigma direction.
@@ -591,9 +594,7 @@
                 rhat = (r3 - 0.5d0*(r1 + r2))/x
               end if
               cost = dot_product(sighat, rhat)
-              if (abs(cost) - 1.0d0 .lt. 0.10d0) then
-                cycle
-              end if               
+
               call epsilon_function (rhat, sighat, eps)
               call Depsilon_3c (r1, r2, r21, z, r3, rhat, eps, depsA, depsB)
 
@@ -688,12 +689,9 @@
                 vdxcXb(:,:,:) = - vdxcXb(:,:,:)
                 vdxcXc(:,:,:) = - vdxcXa(:,:,:) - vdxcXb(:,:,:)
 
-                prho_in_neighbors%aDblock = prho_in_neighbors%aDblock        &
-     &                                     + vdxcXa*Qneutral
-                prho_in_neighbors%bDblock = prho_in_neighbors%bDblock        &
-     &                                     + vdxcXb*Qneutral
-                prho_in_neighbors%cDblock = prho_in_neighbors%cDblock        &
-     &                                     + vdxcXc*Qneutral
+                prho_in_neighbors%Dblocka = prho_in_neighbors%Dblocka + vdxcXa*Qneutral
+                prho_in_neighbors%Dblockb = prho_in_neighbors%Dblockb + vdxcXb*Qneutral
+                prho_in_neighbors%Dblockc = prho_in_neighbors%Dblockc + vdxcXc*Qneutral
               end do ! isubtype = 1, species(in3)%nssh
 
               deallocate (bcxcm, bcxcx, dpbcxcm, dxbcxcm, dybcxcm)
@@ -1085,8 +1083,8 @@
         integer ineigh, mneigh           !< counter over neighbors
         integer in1, in2, in3  !, inu, imu
         integer isubtype                 !< which subtype
-!        integer ix, iindex 
-!        integer norb_mu, norb_nu
+!       integer ix, iindex
+!       integer norb_mu, norb_nu
         integer nssh_i, nssh_j           !< size of the block for the pair
         integer issh, jssh               !< counter over shells
         
@@ -1119,11 +1117,11 @@
         real, dimension (:, :, :), allocatable :: vdxcMb
         real, dimension (:, :, :), allocatable :: vdxcMc
         
-!        real, dimension (:, :, :), allocatable :: vdbcxcm
-!        real, dimension (:, :, :), allocatable :: vdbcxcx
+!       real, dimension (:, :, :), allocatable :: vdbcxcm
+!       real, dimension (:, :, :), allocatable :: vdbcxcx
                 
-!        type(T_Fdata_cell_3c), pointer :: pFdata_cell
-!        type(T_Fdata_bundle_3c), pointer :: pFdata_bundle
+!       type(T_Fdata_cell_3c), pointer :: pFdata_cell
+!       type(T_Fdata_bundle_3c), pointer :: pFdata_bundle
 
         interface
           function distance (a, b)
@@ -1133,6 +1131,7 @@
         end interface
         type(T_assemble_neighbors), pointer :: prho_in_weighted
         type(T_assemble_block), pointer :: prho_in_neighbors_weighted
+
 ! Allocate Arrays
 ! ===========================================================================
 
@@ -1142,7 +1141,8 @@
         do ialpha = 1, s%natoms
           in3 = s%atom(ialpha)%imass
           r3 = s%atom(ialpha)%ratom
-          ! loop over the common neigbor pairs of ialp
+
+          ! loop over the common neigbbor pairs of ialpha
           do ineigh = 1, s%neighbors(ialpha)%ncommon
             mneigh = s%neighbors(ialpha)%neigh_common(ineigh)
             if (mneigh .ne. 0) then
@@ -1151,27 +1151,24 @@
               r1 = s%atom(iatom)%ratom + s%xl(ibeta)%a
               in1 = s%atom(iatom)%imass
               nssh_i = species(in1)%nssh
-              
-              prho_in_weighted=>s%rho_in_weighted(iatom)
-              prho_in_neighbors_weighted=>prho_in_weighted%neighbors(mneigh)
-              
+
               jatom = s%neighbors(ialpha)%jatom_common_j(ineigh)
               jbeta = s%neighbors(ialpha)%jatom_common_b(ineigh)
               r2 = s%atom(jatom)%ratom + s%xl(jbeta)%a
               in2 = s%atom(jatom)%imass
               nssh_j = species(in2)%nssh
-! Allocade DFdata blocks
-              allocate (prho_in_neighbors_weighted%aDblock(3, nssh_i, nssh_j))
-              prho_in_neighbors_weighted%aDblock = 0.00
-              allocate (prho_in_neighbors_weighted%bDblock(3, nssh_i, nssh_j))
-              prho_in_neighbors_weighted%bDblock = 0.00
-              allocate (prho_in_neighbors_weighted%cDblock(3, nssh_i, nssh_j))
-              prho_in_neighbors_weighted%cDblock = 0.00              
 
-! Allocate DFdata blocks
-              allocate (prho_in_neighbors_weighted%aDblock(3, nssh_i, nssh_j)); prho_in_neighbors_weighted%aDblock = 0.00
-              allocate (prho_in_neighbors_weighted%bDblock(3, nssh_i, nssh_j)); prho_in_neighbors_weighted%bDblock = 0.00
-              allocate (prho_in_neighbors_weighted%cDblock(3, nssh_i, nssh_j)); prho_in_neighbors_weighted%cDblock = 0.00
+              ! cut some lengthy notation
+              prho_in_weighted=>s%rho_in_weighted(iatom)
+              prho_in_neighbors_weighted=>prho_in_weighted%neighbors(mneigh)
+
+! Allocade DFdata blocks
+              allocate (prho_in_neighbors_weighted%Dblocka(3, nssh_i, nssh_j))
+              allocate (prho_in_neighbors_weighted%Dblockb(3, nssh_i, nssh_j))
+              allocate (prho_in_neighbors_weighted%Dblockc(3, nssh_i, nssh_j))
+              prho_in_neighbors_weighted%Dblocka = 0.00
+              prho_in_neighbors_weighted%Dblockb = 0.00
+              prho_in_neighbors_weighted%Dblockc = 0.00
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -1203,11 +1200,7 @@
               else
                 rhat = (r3 - 0.5d0*(r1 + r2))/x
               end if
-
               cost = dot_product(sighat, rhat)
-              if (abs(cost) - 1.0d0 .lt. 0.10d0) then
-                cycle
-              end if 
               
               call epsilon_function (rhat, sighat, eps)
               call Depsilon_3c (r1, r2, r21, z, r3, rhat, eps, depsA, depsB)
@@ -1231,8 +1224,6 @@
                 allocate (vdxcMc (3, nssh_i, nssh_j)); vdxcMc = 0.0d0
                 
                 Qneutral = species(in3)%shell(isubtype)%Qneutral
-                
-               
                 call getDMEs_Fdata_3c (in1, in2, in3, P_rhoS_3c, isubtype, x,&
      &                                 z, nssh_i, nssh_j, cost, rhat, sighat,&
      &                                 bcxcm, dpbcxcm, dxbcxcm, dybcxcm)
@@ -1254,13 +1245,12 @@
                    end do ! jssh
                 end do ! issh
                  
-                prho_in_neighbors_weighted%aDblock =                         &
-     &            prho_in_neighbors_weighted%aDblock + vdxcMa*Qneutral
-                prho_in_neighbors_weighted%bDblock =                         &
-     &            prho_in_neighbors_weighted%bDblock + vdxcMb*Qneutral
-                prho_in_neighbors_weighted%cDblock =                         &
-     &            prho_in_neighbors_weighted%cDblock + vdxcMc*Qneutral
-                  
+                prho_in_neighbors_weighted%Dblocka =                         &
+     &            prho_in_neighbors_weighted%Dblocka + vdxcMa*Qneutral
+                prho_in_neighbors_weighted%Dblockb =                         &
+     &            prho_in_neighbors_weighted%Dblockb + vdxcMb*Qneutral
+                prho_in_neighbors_weighted%Dblockc =                         &
+     &            prho_in_neighbors_weighted%Dblockc + vdxcMc*Qneutral
               deallocate (bcxcm, bcxcx, dpbcxcm, dxbcxcm, dybcxcm)
               deallocate (vdxcMa, vdxcMb, vdxcMc)
               end do ! isubtype = 1, species(in3)%nssh
@@ -1327,12 +1317,12 @@
         do iatom = 1, s%natoms
           do ineigh = 1, s%neighbors(iatom)%ncommon
             mneigh = s%neighbors(iatom)%neigh_common(ineigh)
-            deallocate (s%rho_in(iatom)%neighbors(mneigh)%aDblock)
-            deallocate (s%rho_in(iatom)%neighbors(mneigh)%bDblock)
-            deallocate (s%rho_in(iatom)%neighbors(mneigh)%cDblock)
-            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%aDblock)
-            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%bDblock)
-            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%cDblock)
+            deallocate (s%rho_in(iatom)%neighbors(mneigh)%Dblocka)
+            deallocate (s%rho_in(iatom)%neighbors(mneigh)%Dblockb)
+            deallocate (s%rho_in(iatom)%neighbors(mneigh)%Dblockc)
+            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblocka)
+            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblockb)
+            deallocate (s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblockc)
           end do  
         end do
 

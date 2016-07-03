@@ -1,5 +1,5 @@
 ! copyright info:
-!                             @Copyright 2008
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -351,11 +351,10 @@
             Smatrix(:,imu) = Smatrix(:,imu)*sqlami
           end do
           call dgemm ('N', 'C', s%norbitals, s%norbitals, s%norbitals_new,  &
-     &                a1, Smatrix, s%norbitals, Smatrix, s%norbitals, a0,    &
+     &                a1, Smatrix, s%norbitals, Smatrix, s%norbitals, a0,   &
      &                S12matrix, s%norbitals)
         end if
 
-! NOTE: S12matrix here NOW contains the matrix S^-1/2
 
 ! CALCULATE (S^-1/2)*H*(S^-1/2)
 ! ****************************************************************************
@@ -486,4 +485,3 @@
 ! End the module
 ! ===========================================================================
         end module M_diagonalization
-

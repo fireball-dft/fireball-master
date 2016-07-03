@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2012
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -83,7 +83,6 @@
         integer imu, inu
         integer in1, in2                   !< species numbers
         integer jatom                      !< neighbor of iatom
-        integer logfile                    !< writing to which unit
         integer mmu, nnu
 
         integer num_neigh                !< number of neighbors
@@ -110,10 +109,6 @@
 
 ! Procedure
 ! ===========================================================================
-! Initialize logfile
-        logfile = s%logfile
-        write (logfile,*) ' Density matrix for VNL elements... '
-
 ! ****************************************************************************
 !
 !                      C O M P U T E    D E N S I T I E S
@@ -123,18 +118,20 @@
         do iatom = 1, s%natoms
           ! cut some lengthy notation
           pdenmat=>s%denmat_PP(iatom)
+
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors_PP(iatom)%neighn
+          num_neigh = s%neighbors_PPp(iatom)%neighn
           allocate (pdenmat%neighbors(num_neigh))
 
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh        !  <==== loop over iatom's neighbors
             ! cut some more lengthy notation
             pRho_neighbors=>pdenmat%neighbors(ineigh)
-            mbeta = s%neighbors_PP(iatom)%neigh_b(ineigh)
-            jatom = s%neighbors_PP(iatom)%neigh_j(ineigh)
+
+            mbeta = s%neighbors_PPp(iatom)%neigh_b(ineigh)
+            jatom = s%neighbors_PPp(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
 
@@ -179,10 +176,10 @@
 ! Finish loop over k-points.
             end do
  
-            write (*,*) ' iatom, ineigh, jatom = ', iatom, ineigh, jatom
-            do imu = 1, species(in1)%norb_max
-              write (*,*) (pRho_neighbors%block(imu,inu), inu = 1, species(in2)%norb_max)
-            end do
+!            write (*,*) ' iatom, ineigh, jatom = ', iatom, ineigh, jatom
+!            do imu = 1, species(in1)%norb_max
+!              write (*,*) (pRho_neighbors%block(imu,inu), inu = 1, species(in2)%norb_max)
+!            end do
 
 ! Finish loop over atoms and neighbors.
           end do
@@ -294,7 +291,7 @@
 
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
-          norb_mu = species(in1)%norb_max!norb_mu = species(in1)%norb_max
+          norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors_PP(iatom)%neighn
 
 ! Loop over the neighbors of each iatom.
@@ -474,35 +471,54 @@
 
 ! Allocate Arrays
 ! ===========================================================================
-! None
+        do iatom = 1, s%natoms
+          pfi=>s%forces(iatom)
+          num_neigh = s%neighbors_PPp(iatom)%neighn
+          allocate (pfi%vnl_atom (3, num_neigh)); pfi%vnl_atom = 0.0d0
+          allocate (pfi%vnl_ontop (3, num_neigh)); pfi%vnl_ontop = 0.0d0
+        end do
 
 ! Procedure
 ! ===========================================================================
 ! ASSEMBLE VNL ATM CASE  <phi_i|Psi_j><Psi_j|phi_i>
         do iatom = 1, s%natoms
           ! cut some lengthy notation
+          pfi=>s%forces(iatom)
           psvnl=>s%svnl(iatom)
           pdenmat=>s%denmat_PP(iatom)
-          pfi=>s%forces(iatom)
+
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max ! do not use PP here
-          matom = s%neighbors_PP_self(iatom)
+          matom = s%neighbors_PPp_self(iatom)
           num_neigh = s%neighbors_PP(iatom)%neighn
-
-! allocate force terms and initialize to zero
-          allocate (pfi%vnl_atom (3, num_neigh)); pfi%vnl_atom = 0.0d0
-          allocate (pfi%vnl_ontop (3, num_neigh)); pfi%vnl_ontop = 0.0d0
 
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh        !  <==== loop over iatom's neighbors
+            if (ineigh .eq. s%neighbors_PP_self(iatom)) cycle
             mbeta = s%neighbors_PP(iatom)%neigh_b(ineigh)
             jatom = s%neighbors_PP(iatom)%neigh_j(ineigh)
             in2 = s%atom(jatom)%imass
-            norb_nu = species(in2)%norb_max ! do not use PP here
 
             ! cut some lengthy notation
             psvnl_neighbors=>psvnl%neighbors(ineigh)
-            pRho_neighbors_matom=>pdenmat%neighbors(matom)  
+            pRho_neighbors_matom=>pdenmat%neighbors(matom)
+
+!           do jneigh = 1, s%neighbors_PPp(jatom)%neighn
+!             katom = s%neighbors_PPp(jatom)%neigh_j(jneigh)
+!             if (katom .eq. iatom) then
+!               do imu = 1, norb_mu
+!                 do inu = 1, norb_nu
+!                   if (abs(pRho_neighbors%block(imu,inu) - s%denmat_PP(jatom)%neighbors(jneigh)%block(inu,imu)) .gt. 1.0d-3) then
+!                     write (*,*) ' WHAT IS WRONG HERE?! The matrix is not symmetric '
+!                     write (*,*) ' iatom, jatom, imu, inu = ', iatom, jatom, imu, inu
+!                     write (*,*) ' pRho_neighbors%block(imu,inu) = ', pRho_neighbors%block(imu,inu)
+!                     write (*,*) ' s%denmat(jatom)%neighbors(jneigh)%block(inu,imu) = ', s%denmat(jatom)%neighbors(jneigh)%block(inu,imu)
+!                     write (*,*)
+!                   end if
+!                 end do
+!               end do
+!             end if
+!           end do
 
 ! Get the coefficients
 ! We now loop though all shells, and create cl for each orbital.  For example,
@@ -578,11 +594,11 @@
 ! at one of the sites of a wavefunction (ontop case).
 ! Case 1. PP is iatom.  <i | VNL(i) |j>.
             if (iatom .eq. jatom .and. mbeta .eq. 0) then ! do nothing
-              if (s%neighbors_PPx_self(iatom) .ne. ineigh) then
-                write (*,*) 'neighbors_PPx_self(iatom) .ne. ineigh',         &
-     &                       s%neighbors_PPx_self(iatom), ineigh
-                stop
-              end if ! if(neighPP_self)
+!              if (s%neighbors_PPx_self(iatom) .ne. ineigh) then
+!                write (*,*) 'neighbors_PPx_self(iatom) .ne. ineigh',         &
+!     &                       s%neighbors_PPx_self(iatom), ineigh
+!                stop
+!              end if ! if(neighPP_self)
             else
 
               ! memory is allocated inside function
@@ -615,7 +631,7 @@
 ! Mapping to the global matrix
               kneigh = s%neighbors_PPx(iatom)%map(ineigh)
               pRho_neighbors=>pdenmat%neighbors(kneigh)
-              write (*,*) ' iatom, jatom, ineigh, kneigh = ', iatom, jatom, ineigh, kneigh
+!              write (*,*) ' iatom, jatom, ineigh, kneigh = ', iatom, jatom, ineigh, kneigh
 
 ! If r1 = r2, then this is a case where the two wavefunctions are at the
 ! same site, but the potential vna is at a different site (atm case).
@@ -630,16 +646,16 @@
 ! computing the vna_atom term, i.e. < phi(i) | v | phi(i) > but V=v(j) )
 ! interactions.
 
-           write (*,*) ' Writing density matrix for Dassemble_PP interactions: '
-           write (*,*) ' iatom, ineigh = ', iatom, ineigh
-           do imu = 1, norb_mu
-             write (*,*) (pRho_neighbors%block(imu,inu), inu = 1, norb_nu)
-           end do
+!           write (*,*) ' Writing density matrix for Dassemble_PP interactions: '
+!           write (*,*) ' iatom, ineigh = ', iatom, ineigh
+!           do imu = 1, norb_mu
+!             write (*,*) (pRho_neighbors%block(imu,inu), inu = 1, norb_nu)
+!           end do
 
 ! Notice the explicit negative sign, this makes it force like.
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
-                  pfi%vnl_ontop(:,kneigh) = pfi%vnl_ontop(:,kneigh)          &
+                  pfi%vnl_ontop(:,ineigh) = pfi%vnl_ontop(:,ineigh)          &
      &              - pRho_neighbors%block(imu,inu)*PPx(:,imu,inu)
                 end do
               end do
@@ -655,20 +671,23 @@
 ! Loop over iatom
         do iatom = 1,s%natoms
           ! cut some lengthy notation
+          psvnl1 => s%svnl(iatom)
           pdenmat=>s%denmat_PP(iatom)
           pfi=>s%forces(iatom)
 
           in1 = s%atom(iatom)%imass
           norb_mu =  species(in1)%norb_max
-          matom = s%neighbors_PPp_self(iatom)
+          num_neigh = s%neighbors_PP(iatom)%neighn
 
 ! Loop over the neighbors of each iatom.
-          num_neigh = s%neighbors_PP(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             mbeta = s%neighbors_PP(iatom)%neigh_b(ineigh)
             jatom = s%neighbors_PP(iatom)%neigh_j(ineigh)
             in2 = s%atom(jatom)%imass
             norb_nu = species(in2)%norb_max
+
+            ! cut some lengthy notation
+            psvnl2=>s%svnl(jatom)
 
 ! if r1 .ne. r2, then this is a case where the potential is located
 ! at one of the sites of a wavefunction (ontop case).
@@ -677,7 +696,7 @@
 ! Do nothing here - special case. Interaction already calculated in atm case.
 ! sanity check
               if (s%neighbors_PP_self(iatom) .ne. ineigh) then
-                write (*,*) 'neighbors_PP_self(iatom) .ne. ineigh',          &
+                write (*,*) ' neighbors_PP_self(iatom) .ne. ineigh',         &
      &                       s%neighbors_PP_self(iatom), ineigh
                 stop
               end if ! if (neighPP_self)
@@ -686,13 +705,10 @@
               ! memory is allocated inside function
               cl_value => cl(in2)
 
-! Now the second case. <i | V(j) | j>.
-! Looking for <phi_j|Psi_j>, what is jneigh of jatom itself in the nPPx list
-              psvnl1 => s%svnl(iatom)
-              psvnl1_neighbors => psvnl1%neighbors(ineigh)
-
               mneigh_self = s%neighbors_PP_self(jatom)
-              psvnl2 => s%svnl(jatom)
+
+              ! cut lengthy notation
+              psvnl1_neighbors => psvnl1%neighbors(ineigh)
               psvnl2_neighbors => psvnl2%neighbors(mneigh_self)
 
 ! Note - spVNL are always the derivative of the orbital and NOT the potential.
@@ -731,8 +747,8 @@
 ! Notice the explicit negative sign, this makes it force like.
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
-                   pfi%vnl_ontop(:,kneigh) = pfi%vnl_ontop(:,kneigh)          &
-      &              - pRho_neighbors%block(imu,inu)*PPx(:,imu,inu)
+!                 pfi%vnl_ontop(:,kneigh) = pfi%vnl_ontop(:,kneigh)         &
+!    &             - pRho_neighbors%block(imu,inu)*PPx(:,imu,inu)
                 end do
               end do
               deallocate (PPx)

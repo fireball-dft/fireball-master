@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2013
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -168,36 +168,39 @@
         subroutine vxc_Harris
         implicit none
 
+! Argument Declaration and Description
+! ===========================================================================
+! None
+
 ! Parameters and Data Declaration
 ! ===========================================================================
 ! None
 
-! ===========================================================================
-! Argument Declaration and Description
-! None
-
 ! Variable Declaration and Description
 ! ===========================================================================
-! None
+        integer logfile                     !< writing to which unit
 
 ! Procedure
 ! ===========================================================================
-        write (*,*)
-        write (*,*) ' ******************************************************* '
-        write (*,*) '        E X C H A N G E   C O R R E L A T I O N          '
-        write (*,*) '                  I N T E R A C T I O N S                '
-        write (*,*) ' ******************************************************* '
-        write (*,*)
+! Initialize logfile
+        logfile = 21
 
-        write (*,*) ' Calling one-center case. '
+        write (logfile,*)
+        write (logfile,*) ' ******************************************************* '
+        write (logfile,*) '        E X C H A N G E   C O R R E L A T I O N          '
+        write (logfile,*) '                  I N T E R A C T I O N S                '
+        write (logfile,*) ' ******************************************************* '
+        write (logfile,*)
+
+        write (logfile,*) ' Calling one-center case. '
         call vxc_1c
 
-        write (*,*)
-        write (*,*) ' Building the two center density on grid '
+        write (logfile,*)
+        write (logfile,*) ' Building the two center density on grid '
         call rho_2c_store
 
-        write (*,*)
-        write (*,*) ' Calling two-center vxc_ontop case. '
+        write (logfile,*)
+        write (logfile,*) ' Calling two-center vxc_ontop case. '
         call vxc_ontop_Harris
 
 ! Deallocate Arrays
@@ -520,6 +523,7 @@
         integer issh, jssh
         integer index_1c, nME1c_max         !< basically the number of non-zero
         integer isorp, ideriv               !< the number of different types
+        integer logfile                     !< writing to which unit
         integer nFdata_cell_1c              !< indexing of interactions
 
         real d                              !< distance between the two centers
@@ -535,6 +539,9 @@
 
 ! Procedure
 ! ============================================================================
+! Initialize logfile
+        logfile = 21
+
 ! Assign values to the unrequired variables for this specific interaction.
         ideriv = 999
 
@@ -566,7 +573,7 @@
           rhomax = rcutoff1
 
 ! Loop over grid
-          write (*,100) species(ispecies)%nZ
+          write (logfile,100) species(ispecies)%nZ
           d = 0.0d0
 
           ! Set integration limits
@@ -1121,6 +1128,7 @@
         integer iexc                        ! which type of exchange-correlation
         integer igrid                       !< counter for grid points
         integer iz, irho                    !< counter for grid points
+        integer logfile                     !< writing to which unit
         integer nnz, nnrho                  !< number of intergration points
 
         real d                              !< distance between the two centers
@@ -1150,6 +1158,9 @@
 
 ! Procedure
 ! ===========================================================================
+! Initialize logfile
+        logfile = 21
+
 ! Set iexc
         ispecies = 1
         iexc = species_PP(ispecies)%iexc
@@ -1172,7 +1183,7 @@
             rhomax = max(rcutoff1, rcutoff2)
 
 ! Loop over grid
-            write (*,100) species(ispecies)%nZ, species(jspecies)%nZ
+            write (logfile,100) species(ispecies)%nZ, species(jspecies)%nZ
             allocate (prho_bundle%rho_2c_store(ndd_vxc))
             do igrid = 1, ndd_vxc
               prho_2c => prho_bundle%rho_2c_store(igrid)
@@ -1387,6 +1398,7 @@
         integer igrid                       !< number of grid points
         integer index_2c, nME2c_max         !< basically the number of non-zero
         integer isorp, ideriv               !< the number of different types
+        integer logfile                     !< writing to which unit
         integer nFdata_cell_2c              !< indexing of interactions
 
         real dmax                           !< max distance between two centers
@@ -1407,6 +1419,9 @@
 
 ! Procedure
 ! ============================================================================
+! Initialize logfile
+        logfile = 21
+
 ! Assign values to the unrequired variables for this specific interaction.
         ideriv = 999
 
@@ -1467,7 +1482,7 @@
      &                    index_2c = 1, nME2c_max)
 
 ! Loop over grid
-            write (*,200) species(ispecies)%nZ, species(jspecies)%nZ
+            write (logfile,200) species(ispecies)%nZ, species(jspecies)%nZ
             do igrid = 1, ndd_vxc
               d = d + drr
 

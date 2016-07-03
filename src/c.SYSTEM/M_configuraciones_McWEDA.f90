@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2013
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -123,18 +123,19 @@
           ! vna forces - add these together to vna in the end
           real, allocatable :: vna_atom (:, :)  ! atom case
           real, allocatable :: vna_ontop (:, :) ! ontop case
-          ! three-center force terms for exchange-correlation interactions
+
+          ! three-center force terms for Hartree interactions
           real, dimension (3) :: f3naa
           real, dimension (3) :: f3nab
           real, dimension (3) :: f3nac
 
           real, dimension (3) :: vnl
-          ! vnl forces - add these together to vnl in the then
+          ! vnl forces - add these together to vnl in the end
           real, allocatable :: vnl_atom (:, :)  ! atom case
           real, allocatable :: vnl_ontop (:, :) ! ontop case
 
           real, dimension (3) :: vxc
-          ! vnl forces - add these together to vnl in the then
+          ! vnl forces - add these together to vxc in the end
           real, allocatable :: vxc_off_site (:, :) ! atom case
           real, allocatable :: vxc_on_site (:, :)  ! atom case
 
@@ -376,7 +377,7 @@
         character (len = 25) filename
         character (len = 20) string
 
-        logical read_string
+        logical read_string, file_exists
 
 ! Allocate Arrays
 ! ===========================================================================
@@ -420,16 +421,25 @@
         Ecut_set = Ecut
 
 ! Open structures.inp file and read global &OUTPUT options
+
         filename = 'structures.inp'
-        open (unit = 2, file = filename, status = 'old')
+        INQUIRE(FILE=filename, EXIST=file_exists)   ! file_exists will be TRUE if the file                                                                    
+                                                    ! exists and FALSE otherwise                                                                              
+        if ( file_exists ) then
+           write (*,*) 'Reading: >'//filename//'<'
+           open (unit = 222, file = filename, status = 'old')
+        else
+           write(*,*) 'ERROR: Could not open: ', filename
+           call exit(1)
+        end if
 
         string = '&OUTPUT'
         call read_sections (filename, string, read_string)
-        if (read_string) read (2, nml = output)
+        if (read_string) read (222, nml = output)
 
         string = '&OPTIONS'
         call read_sections (filename, string, read_string)
-        if (read_string) read (2, nml = options)
+        if (read_string) read (222, nml = options)
 
 ! State what is being written out
         write (ilogfile,*)
@@ -621,7 +631,7 @@
         write (logfile,200)
         do iatom = 1, s%natoms
           write (logfile,202) iatom, s%atom(iatom)%species%symbol,          &
-     &                                s%atom(iatom)%ratom, s%atom(iatom)%imass
+     &                               s%atom(iatom)%ratom, s%atom(iatom)%imass
         end do
         write (logfile,200)
         write (logfile,*) '  '

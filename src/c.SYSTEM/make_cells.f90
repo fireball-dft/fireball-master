@@ -125,7 +125,7 @@
 ! Next - fill up xl with real angstrom units.
         mbeta = 1
         t%xl(0)%a = 0.0d0
-        !mbeta = 0 corresponds to the actual unit cell.
+        ! mbeta = 0 corresponds to the actual unit cell.
         do iz = -mbox, mbox
           do iy = -mbox, mbox
             do ix = -mbox, mbox

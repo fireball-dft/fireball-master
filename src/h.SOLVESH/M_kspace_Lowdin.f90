@@ -1,5 +1,5 @@
 ! copyright info:
-!                             @Copyright 2013
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -222,7 +222,7 @@
             in2 = s%atom(jatom)%imass
             norb_nu = species(in2)%norb_max
             allocate(pH_neighbors%block(norb_mu, norb_nu))
-            
+
             pH_neighbors%block = pK_neighbors%block + pvna_neighbors%block   & 
         &                        + pvna_neighbors%blocko                     &
         &                        + pvxc_neighbors%block - pSR_neighbors%block&
@@ -304,13 +304,23 @@
         type(T_assemble_neighbors), pointer :: pkinetic
         type(T_assemble_block), pointer :: pvna_neighbors
         type(T_assemble_neighbors), pointer :: pvna
-        type(T_assemble_block), pointer :: prho_in_neighbors
-        type(T_assemble_neighbors), pointer :: prho_in
+
+        ! exchange-correlation interactions
+!       type(T_assemble_block), pointer :: prho_in_neighbors
+!       type(T_assemble_neighbors), pointer :: prho_in
+!       type(T_assemble_block), pointer :: prho_bond_neighbors
+!       type(T_assemble_neighbors), pointer :: prho_bond
+!       type(T_assemble_block), pointer :: pWrho_in_neighbors
+!       type(T_assemble_neighbors), pointer :: pWrho_in
+!       type(T_assemble_block), pointer :: pWrho_bond_neighbors
+!       type(T_assemble_neighbors), pointer :: pWrho_bond
         type(T_assemble_block), pointer :: pvxc_neighbors
         type(T_assemble_neighbors), pointer :: pvxc
+
         type(T_assemble_block), pointer :: pvnl_neighbors
         type(T_assemble_neighbors), pointer :: pvnl
 
+        ! long-range interactions
         type(T_assemble_block), pointer :: pSR_neighbors
         type(T_assemble_neighbors), pointer :: pewaldsr
         type(T_assemble_block), pointer :: pLR_neighbors
@@ -342,10 +352,18 @@
           poverlap=>s%overlap(iatom)
           pkinetic=>s%kinetic(iatom)
           pvna=>s%vna(iatom)
-          prho_in=>s%rho_in(iatom)
+
+          ! vxc interactions
+!         prho_in=>s%rho_in(iatom)
+!         prho_bond=>s%rho_bond(iatom)
+!         pWrho_in=>s%rho_in_weighted(iatom)
+!         pWrho_bond=>s%rho_bond_weighted(iatom)
           pvxc=>s%vxc(iatom)
+
+          ! long-range interactions
           pewaldsr=>s%ewaldsr(iatom)
           pewaldlr=>s%ewaldlr(iatom)
+
           pvnl=>s%vnl(iatom)
           pHamiltonian=>s%Hamiltonian(iatom)
 
@@ -403,18 +421,57 @@
      &         (pvna_neighbors%block(imu,inu), inu = 1, norb_nu)
             end do
 
-! Exchange-correlation matrix elements
-            write (logfile,*)
-            write (logfile,'(4x,A)') 'rho: input density matrices (for vxc) '
-            write (logfile,'(4x,A)') '------------------------------------- '
-            ! cut some more lengthy notation
-            prho_in_neighbors=>prho_in%neighbors(ineigh)
-            norb_mu = species(in1)%norb_max
-            norb_nu = species(in2)%norb_max
-            do imu = 1, norb_mu
-              write (logfile,104)                                            &
-     &         (prho_in_neighbors%block(imu,inu), inu = 1, norb_nu)
-            end do
+! Exchange-correlation matrix elements - density
+!            write (logfile,*)
+!            write (logfile,'(4x,A)') 'rho: input density matrices (for vxc) '
+!            write (logfile,'(4x,A)') '------------------------------------- '
+!            ! cut some more lengthy notation
+!            prho_in_neighbors=>prho_in%neighbors(ineigh)
+!            norb_mu = species(in1)%norb_max
+!            norb_nu = species(in2)%norb_max
+!            do imu = 1, norb_mu
+!              write (logfile,104)                                            &
+!     &         (prho_in_neighbors%block(imu,inu), inu = 1, norb_nu)
+!            end do
+
+! Exchange-correlation matrix elements - bond density
+!            write (logfile,*)
+!            write (logfile,'(4x,A)') 'rho: input (bond) density (for vxc)   '
+!            write (logfile,'(4x,A)') '------------------------------------- '
+!            ! cut some more lengthy notation
+!            prho_bond_neighbors=>prho_bond%neighbors(ineigh)
+!            norb_mu = species(in1)%norb_max
+!            norb_nu = species(in2)%norb_max
+!            do imu = 1, norb_mu
+!              write (logfile,104)                                            &
+!     &         (prho_bond_neighbors%block(imu,inu), inu = 1, norb_nu)
+!            end do
+
+! Exchange-correlation matrix elements - input weighted density
+!            write (logfile,*)
+!            write (logfile,'(4x,A)') 'rhoS: input density matrices (for vxc) '
+!            write (logfile,'(4x,A)') '------------------------------------- '
+!            ! cut some more lengthy notation
+!            pWrho_in_neighbors=>prho_in%neighbors(ineigh)
+!            norb_mu = species(in1)%norb_max
+!            norb_nu = species(in2)%norb_max
+!            do imu = 1, norb_mu
+!              write (logfile,104)                                            &
+!     &         (pWrho_in_neighbors%block(imu,inu), inu = 1, norb_nu)
+!            end do
+
+! Exchange-correlation matrix elements - bond density
+!            write (logfile,*)
+!            write (logfile,'(4x,A)') 'rhoS: input (bond) density (for vxc)   '
+!            write (logfile,'(4x,A)') '------------------------------------- '
+!            ! cut some more lengthy notation
+!            pWrho_bond_neighbors=>prho_bond%neighbors(ineigh)
+!            norb_mu = species(in1)%norb_max
+!            norb_nu = species(in2)%norb_max
+!            do imu = 1, norb_mu
+!              write (logfile,104)                                            &
+!     &         (pWrho_bond_neighbors%block(imu,inu), inu = 1, norb_nu)
+!            end do
 
 ! Exchange-correlation matrix elements
             write (logfile,*)
@@ -457,8 +514,8 @@
 
 ! Complete Hamiltonian (without vnl) matrix elements
             write (logfile,*)
-            write (logfile,'(4x,A)') 'Total Hamiltonian '
-            write (logfile,'(4x,A)') '----------------- '
+            write (logfile,'(4x,A)') 'Total Hamiltonian - without vnl piece '
+            write (logfile,'(4x,A)') '------------------------------------- '
             ! cut some more lengthy notation
             pH_neighbors=>pHamiltonian%neighbors(ineigh)
             norb_mu = species(in1)%norb_max
@@ -481,7 +538,7 @@
                 write (logfile,'(4x,A)') '------------------------------- '
                 ! cut some more lengthy notation
                 pvnl_neighbors=>pvnl%neighbors(jneigh)
-                 norb_mu = species(in1)%norb_max
+                norb_mu = species(in1)%norb_max
                 norb_nu = species(in2)%norb_max
                 do imu = 1, norb_mu
                   write (logfile,104)                                        &
@@ -704,11 +761,11 @@
           pvnl=>s%vnl(iatom)
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
 
 ! Now loop over all neighbors ineigh of iatom.
 ! Add in all the interactions into the n x n HUGE matrix for
 ! diagonalization.
+          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh ! <===== loop over i's neighbots
             pH_neighbors=>pHamiltonian%neighbors(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
@@ -732,11 +789,13 @@
           end do ! do ineigh
 
 ! VNL PART:
-          do ineigh = 1, s%neighbors_PPp(iatom)%neighn
+          num_neigh = s%neighbors_PPp(iatom)%neighn
+          do ineigh = 1, num_neigh
             pvnl_neighbors=>pvnl%neighbors(ineigh)
             jatom = s%neighbors_PPp(iatom)%neigh_j(ineigh)
             mbeta = s%neighbors_PPp(iatom)%neigh_b(ineigh)
             in2 = s%atom(jatom)%imass
+            norb_nu = species(in2)%norb_max
 
             ! Find the phase which is based on k*r
             vec = s%xl(mbeta)%a + s%atom(jatom)%ratom - s%atom(iatom)%ratom
@@ -744,9 +803,9 @@
             dot = sks(1)*vec(1) + sks(2)*vec(2) + sks(3)*vec(3)
 
 ! So this matrix element goes in the i,j slot.
-            do inu = 1, species(in2)%norb_max
+            do inu = 1, norb_nu
               jnu = inu + s%iblock_slot(jatom)
-              do imu = 1, species(in1)%norb_max
+              do imu = 1, norb_mu
                 jmu = imu + s%iblock_slot(iatom)
                 Hmatrix(jmu,jnu) =                                           &
      &           Hmatrix(jmu,jnu) + phase(dot)*pvnl_neighbors%block(imu,inu)
@@ -756,7 +815,6 @@
         end do ! do iatom
 
         call diagonalize_H_Lowdin (s, iscf_iteration, ikpoint)
-        !write(*,'(2x,A,20E9.2)') 'eigen:', eigen
         s%kpoints(ikpoint)%eigen = eigen
 
         write (logfile,*)

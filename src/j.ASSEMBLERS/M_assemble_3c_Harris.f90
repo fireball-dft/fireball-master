@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2013
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -90,7 +90,7 @@
         integer ialpha, iatom, jatom     ! the three parties involved
         integer ibeta, jbeta             ! cells for three atoms
         integer ineigh, mneigh           ! counter over neighbors
-        integer in1, in2, in3            ! species numbers
+        integer in1, in2, indna          ! species numbers
         integer interaction, isorp       ! which interaction and subtype
 
         integer norb_mu, norb_nu         ! size of the block for the pair
@@ -106,6 +106,9 @@
         real, dimension (:, :), allocatable :: bcnam
         real, dimension (:, :), allocatable :: bcnax
 
+        type(T_assemble_block), pointer :: pvna_neighbors
+        type(T_assemble_neighbors), pointer :: pvna
+
         interface
           function distance (a, b)
             real distance
@@ -120,9 +123,10 @@
 ! ===========================================================================
 ! Loop over the atoms in the central cell.
         do ialpha = 1, s%natoms
-          in3 = s%atom(ialpha)%imass
+          indna = s%atom(ialpha)%imass
           r3 = s%atom(ialpha)%ratom
-          ! loop over the common neigbor pairs of ialp
+
+          ! loop over the common neigbor pairs of ialpha
           do ineigh = 1, s%neighbors(ialpha)%ncommon
             mneigh = s%neighbors(ialpha)%neigh_common(ineigh)
             if (mneigh .ne. 0) then
@@ -137,6 +141,9 @@
               r2 = s%atom(jatom)%ratom + s%xl(jbeta)%a
               in2 = s%atom(jatom)%imass
               norb_nu = species(in2)%norb_max
+
+              ! cut some lengthy notation
+              pvna=>s%vna(iatom); pvna_neighbors=>pvna%neighbors(mneigh)
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -181,17 +188,15 @@
               allocate (bcnam(norb_mu, norb_nu))
               allocate (bcnax(norb_mu, norb_nu))
 
-              call getMEs_Fdata_3c (in1, in2, in3, interaction, isorp, x,     &
+              call getMEs_Fdata_3c (in1, in2, indna, interaction, isorp, x,   &
      &                              z, norb_mu, norb_nu, cost, bcnam)
 
               ! Rotate into crystal coordinates
               call rotate (in1, in2, eps, norb_mu, norb_nu, bcnam, bcnax)
 
               ! Add this piece into the total
-              s%vna(iatom)%neighbors(mneigh)%block =                          &
-     &             s%vna(iatom)%neighbors(mneigh)%block + bcnax*P_eq2
-              deallocate (bcnam)
-              deallocate (bcnax)
+              pvna_neighbors%block = pvna_neighbors%block + bcnax*P_eq2
+              deallocate (bcnam, bcnax)
             end if
           end do ! end loop over neighbors
         end do ! end loop over atoms

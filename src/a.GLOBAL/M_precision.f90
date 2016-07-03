@@ -36,7 +36,7 @@
 !(= 8 for many machine architectures)
         integer, parameter :: dp=kind(1.0d0)
         integer, parameter :: dpc=kind((1.0_dp,1.0_dp))  ! Complex should not be used presently
-                                                  ! except for use of libraries
+                                                         ! except for use of libraries
 
 !Identifiers for important files
         integer, parameter :: ilogfile=21                ! output.log unit number

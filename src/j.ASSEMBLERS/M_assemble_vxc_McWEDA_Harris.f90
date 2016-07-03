@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2008
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -125,8 +125,7 @@
 ! Allocate Arrays
 ! ===========================================================================
         allocate (s%vxc(s%natoms))
-!        open(unit= 10, file= "/home/accounts/ahernandez/Desktop/validationExangeForc/vxc_off_diag.txt")
-!        open(unit= 11, file= "/home/accounts/ahernandez/Desktop/validationExangeForc/vxc_diag.txt")
+
 ! Procedure
 ! ===========================================================================
 ! Initialize logfile
@@ -287,7 +286,6 @@
           pvxc_SN_bond=>vxc_SN_bond(iatom)
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          !write(10,*) norb_mu, 'norb_mu'
           num_neigh = s%neighbors(iatom)%neighn
           allocate (pvxc_SN%neighbors(num_neigh))
           allocate (pvxc_SN_bond%neighbors(num_neigh))
@@ -303,7 +301,6 @@
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
-            !write(10,*) norb_nu, 'norb_nu'
             allocate (pvxc_SN_neighbors%block(norb_mu, norb_nu))
             pvxc_SN_neighbors%block = 0.0d0
             allocate (pvxc_SN_bond_neighbors%block(norb_mu, norb_nu))
@@ -747,4 +744,3 @@
 ! End Module
 ! ===========================================================================
         end module M_assemble_vxc
-

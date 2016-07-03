@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2008
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -97,7 +97,7 @@
 ! Program Declaration
 ! ===========================================================================
         subroutine Drotate (in1, in2, eps, Deps, norb_mu, norb_nu, matm,     &
-     &                         Dmatm, Dmatx)
+     &                      Dmatm, Dmatx)
         implicit none
 
 ! Argument Declaration and Description
@@ -140,7 +140,7 @@
 ! term A: dAleft/dr*Aright*matrix
 ! term B: Aleft*dAright/dr*matrix
 ! term C Aleft*Aright*dmatrix/dr
-        call Dmatrix (in1, in2, norb_mu, norb_nu, matm, dmatm,  dmat, pmat,  &
+        call Dmatrix (in1, in2, norb_mu, norb_nu, matm, dmatm, dmat, pmat,  &
      &                Ddmat, Dpmat, Dmatx)
 
 ! Format Statements
@@ -439,15 +439,13 @@
 
           n2 = 0
           do jssh = 1, species(in2)%nssh
-            l2 =  species(in2)%shell(jssh)%lssh !shell_PP
-            !print *, norb_mu, norb_nu, l2, l1, "norb_mu norb_nu l2 l1 for term" 
+            l2 =  species(in2)%shell(jssh)%lssh
             call chooser (l2, dmat, pmat, right)
             call Dchooser (l2, Ddmat, Dpmat, Dright)
 
 ! Initialize
             do k2 = 1, 2*l2 + 1
               do k1 = 1, 2*l1 + 1
-                !print *, n1+k1, n2+k2, 'n1+k1 n2+k2'
                 term(:,n1+k1,n2+k2) = 0.0d0
               end do
             end do
@@ -480,8 +478,6 @@
 ! None
         return
         end subroutine Dmatrix
-        
-
 
 ! End Module
 ! ===========================================================================

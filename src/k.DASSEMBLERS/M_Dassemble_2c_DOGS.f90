@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2012
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -143,21 +143,23 @@
 ! ===========================================================================
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          poverlap=>s%overlap(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
 
+          ! cut some lengthy notation
+          poverlap=>s%overlap(iatom)
+
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pS_neighbors=>poverlap%neighbors(ineigh)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
+
+            ! cut some more lengthy notation
+            pS_neighbors=>poverlap%neighbors(ineigh)
 
 ! Allocate the block size
             norb_nu = species(in2)%norb_max
@@ -178,7 +180,7 @@
               sighat = (r2 - r1)/z
             end if
             call epsilon_function (r2, sighat, eps)
-	    call Depsilon_2c (r1, r2, eps, deps)
+	        call Depsilon_2c (r1, r2, eps, deps)
 
 ! Get the matrix from the data files - which is the matrix in molecular
 ! coordinates (stored in sm). Rotate the matrix into crystal coordinates.
@@ -335,21 +337,23 @@
 ! ===========================================================================
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          pkinetic=>s%kinetic(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
 
+          ! cut some lengthy notation
+          pkinetic=>s%kinetic(iatom)
+
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pK_neighbors=>pkinetic%neighbors(ineigh)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
+
+            ! cut some more lengthy notation
+            pK_neighbors=>pkinetic%neighbors(ineigh)
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
@@ -370,7 +374,7 @@
               sighat = (r2 - r1)/z
             end if
             call epsilon_function (r2, sighat, eps)
-	    call Depsilon_2c (r1, r2, eps, deps)
+	        call Depsilon_2c (r1, r2, eps, deps)
 
 ! Get the matrix from the data files - which is the matrix in molecular
 ! coordinates (stored in tm). Rotate the matrix into crystal coordinates.
@@ -497,12 +501,10 @@
         real, dimension (3) :: sighat   !< unit vector along r2 - r1
 
 ! dipm = kinetic matrix in molecular coordinates
-! dipx = kinetic matrix in crystal coordinates
 ! ddipm = derivative of kinetic matrix in molecular coordinates
 ! vddipm = vectorized derivative of kinetic matrix in molecular coordinates
 ! vddipx = vectorized derivative of kinetic matrix in crystal coordinates
         real, dimension (:, :), allocatable :: dipm
-        real, dimension (:, :), allocatable :: dipx
         real, dimension (:, :), allocatable :: ddipm
         real, dimension (:, :, :), allocatable :: vddipm
         real, dimension (:, :, :), allocatable :: vddipx
@@ -525,23 +527,23 @@
 ! ===========================================================================
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          pdipole_z=>s%dipole_z(iatom)
-
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
 
+          ! cut some lengthy notation
+          pdipole_z=>s%dipole_z(iatom)
+
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pdip_neighbors=>pdipole_z%neighbors(ineigh)
-
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
+
+            ! cut some more lengthy notation
+            pdip_neighbors=>pdipole_z%neighbors(ineigh)
 
 ! Allocate the block size
             norb_nu = species(in2)%norb_max
@@ -574,12 +576,10 @@
             in3 = in2
 
 ! dipm = overlap matrix in molecular coordinates
-! dipx = overlap matrix in crystal coordinates
 ! ddipm = derivative of overlap matrix in molecular coordinates
 ! vddipm = vectorized derivative of overlap matrix in molecular coordinates
 ! vddipx = vectorized derivative of overlap matrix in crystal coordinates
             allocate (dipm (norb_mu, norb_nu)); dipm = 0.0d0
-            allocate (dipx (norb_mu, norb_nu)); dipx = 0.0d0
             allocate (ddipm (norb_mu, norb_nu)); ddipm = 0.0d0
             allocate (vddipm (3, norb_mu, norb_nu)); vddipm = 0.0d0
             allocate (vddipx (3, norb_mu, norb_nu)); vddipx = 0.0d0
@@ -616,7 +616,7 @@
 
 ! Store the derivitive, rotate vector matrix.
 			pdip_neighbors%Dblock = vddipx
-            deallocate (dipm, dipx, ddipm, vddipm, vddipx)
+            deallocate (dipm, ddipm, vddipm, vddipx)
           end do ! end loop over neighbors
         end do ! end loop over atoms
 
@@ -754,27 +754,29 @@
 ! blocks.  We calculate the atom cases in a separate loop.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          pvna=>s%vna(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
 
+          ! cut some lengthy notation
+          pvna=>s%vna(iatom)
+
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pvna_neighbors=>pvna%neighbors(ineigh)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
 
+            ! cut some more lengthy notation
+            pvna_neighbors=>pvna%neighbors(ineigh)
+
 ! Allocate block size
             norb_nu = species(in2)%norb_max
-            allocate (pvna_neighbors%Dblock (3, norb_mu, norb_nu))
-            pvna_neighbors%Dblock = 0.0d0
+            allocate (pvna_neighbors%Dblock (3, norb_mu, norb_mu))
             allocate (pvna_neighbors%Dblocko (3, norb_mu, norb_nu))
+            pvna_neighbors%Dblock = 0.0d0
             pvna_neighbors%Dblocko = 0.0d0
 
 ! SET-UP STUFF
@@ -809,9 +811,15 @@
 
 ! Get the matrix from the data files - which is the matrix in molecular
 ! coordinates (stored in bcnam). Rotate the matrix into crystal coordinates.
-! The rotated  matrix elements are stored in bcnax, where x means crytal
-! coordinates.
+! The rotated  matrix elements are stored in vbcnax, the vectorized matrix
+! elements; x means crytal coordinates.
+
+! FORCES - ONTOP LEFT CASE
+! ****************************************************************************
 ! For the vna_ontopL case, the potential is in the first atom - left (iatom):
+! dbcnam is the "scalar" derivative of the matrix; vdbcnam is the "vector"
+! derivative of the matrix in molecular coordinates.  When we are done, we get:
+! vdtx as the vector derivative of the matrix in crystal coordinates.
               interaction = P_vna_ontopL
               in3 = in2
 
@@ -828,7 +836,7 @@
 
 ! Neutral atom piece
               isorp = 0
-              call getDMEs_Fdata_2c (in1, in3, interaction, isorp, z,         &
+              call getDMEs_Fdata_2c (in1, in2, interaction, isorp, z,         &
      &                               norb_mu, norb_nu, bcnam, dbcnam)
 
 ! Note that if we are calculating the on-site matrix elements, then the
@@ -843,15 +851,9 @@
                 end do
               end do
 
- 			  call Drotate (in1, in2, eps, deps, norb_mu, norb_nu, bcnam,    &
+ 			  call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,    &
      &	                    vdbcnam, vdbcnax)
-			  pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + vdbcnax
-
-! Form the Left ontop force. Use the derivatives, since the derivative is
-! with respect to d/d(ratom) when the atom is ontop atom 1.
-! Note that we only compute ontop left. That is because we do cross terms.
-! If we were to do both ontop left and ontop right, then we would get
-! double counting in the forces.
+			  pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + vdbcnax*P_eq2
 
 ! Charged atom case
               do isorp = 1, species(in1)%nssh
@@ -860,7 +862,7 @@
 ! Reinitialize
                 bcnam = 0.0d0; bcnax = 0.0d0; dbcnam = 0.0d0
                 vdbcnam = 0.0d0; vdbcnax = 0.0d0
-                call getDMEs_Fdata_2c (in1, in3, interaction, isorp, z,      &
+                call getDMEs_Fdata_2c (in1, in2, interaction, isorp, z,      &
      &                                 norb_mu, norb_nu, bcnam, dbcnam)
 
 ! Note that if we are calculating the on-site matrix elements, then the
@@ -875,16 +877,17 @@
                   end do
                 end do
 
- 			    call Drotate (in1, in2, eps, deps, norb_mu, norb_nu, bcnam,  &
+ 			    call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,  &
      &	                      vdbcnam, vdbcnax)
-			    pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + dQ*vdbcnax
+			    pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + dQ*vdbcnax*P_eq2
               end do ! end loop over isorp
 
-! Form the Right ontop force. Use the derivatives, since the derivative is
-! with respect to d/d(ratom) when the atom is ontop atom 1.
-! Note that we only compute ontop left. That is because we do cross terms.
-! If we were to do both ontop left and ontop right, then we would get
-! double counting in the forces.
+! FORCES - ONTOP RIGHT CASE
+! ****************************************************************************
+! For the vna_ontopR case, the potential is in the first atom - left (iatom):
+! dbcnam is the "scalar" derivative of the matrix; vdbcnam is the "vector"
+! derivative of the matrix in molecular coordinates.  When we are done, we get:
+! vdtx as the vector derivative of the matrix in crystal coordinates.
               interaction = P_vna_ontopR
               in3 = in2
 
@@ -894,7 +897,7 @@
 
 ! Neutral atom piece
               isorp = 0
-              call getDMEs_Fdata_2c (in1, in3, interaction, isorp, z,         &
+              call getDMEs_Fdata_2c (in1, in2, interaction, isorp, z,         &
      &                               norb_mu, norb_nu, bcnam, dbcnam)
 
 ! Note that if we are calculating the on-site matrix elements, then the
@@ -909,18 +912,18 @@
                 end do
               end do
 
-              call Drotate (in1, in2, eps, deps, norb_mu, norb_nu, bcnam,    &
+              call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,    &
      &                      vdbcnam, vdbcnax)
-              pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + vdbcnax
+              pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + vdbcnax*P_eq2
 
 ! Charged atom case
-              do isorp = 1, species(in2)%nssh
-                dQ = s%atom(iatom)%shell(isorp)%dQ
+              do isorp = 1, species(in3)%nssh
+                dQ = s%atom(jatom)%shell(isorp)%dQ
 
 ! Reinitialize
                 bcnam = 0.0d0; bcnax = 0.0d0; dbcnam = 0.0d0
                 vdbcnam = 0.0d0; vdbcnax = 0.0d0
-                call getDMEs_Fdata_2c (in1, in3, interaction, isorp, z,      &
+                call getDMEs_Fdata_2c (in1, in2, interaction, isorp, z,      &
      &                                 norb_mu, norb_nu, bcnam, dbcnam)
 
 ! Note that if we are calculating the on-site matrix elements, then the
@@ -935,39 +938,42 @@
                   end do
                 end do
 
-                call Drotate (in1, in2, eps, deps, norb_mu, norb_nu, bcnam,  &
+                call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,  &
      &                        vdbcnam, vdbcnax)
-                pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + dQ*vdbcnax
+                pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + dQ*vdbcnax*P_eq2
               end do ! end loop over isorp
               deallocate (bcnam, bcnax, dbcnam, vdbcnam, vdbcnax)
             end if ! end if for r1 .eq. r2 case
           end do ! end loop over neighbors
         end do ! end loop over atoms
 
-! CALL DOSCENTROS AND GET VNA FOR ATOM CASE
+! FORCES - ATM CASE
 ! ****************************************************************************
-! The vna two-center terms are: ontop (L), ontop (R), and atom.
-! Second, do vna_atom case. Here we compute <i | v(j) | i> matrix elements.
+! For the vna_atom case, the potential is in the first atom - left (iatom):
+! dbcnam is the "scalar" derivative of the matrix; vdbcnam is the "vector"
+! derivative of the matrix in molecular coordinates.  When we are done, we get:
+! vdtx as the vector derivative of the matrix in crystal coordinates.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          pvna=>s%vna(iatom)
-          poverlap=>s%overlap(iatom)
-          matom = s%neigh_self(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
+          matom = s%neigh_self(iatom)
+
+          ! cut some lengthy notation
+          pvna=>s%vna(iatom)
+          poverlap=>s%overlap(iatom); pS_neighbors=>poverlap%neighbors(matom)
 
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pvna_neighbors=>pvna%neighbors(ineigh)
-            pS_neighbors=>poverlap%neighbors(ineigh)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
+
+            ! cut some more lengthy notation
+            pvna_neighbors=>pvna%neighbors(ineigh)
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -983,7 +989,10 @@
               sighat = (r2 - r1)/z
             end if
             call epsilon_function (r2, sighat, eps)
-	    call Depsilon_2c (r1, r2, eps, deps)
+	        call Depsilon_2c (r1, r2, eps, deps)
+
+! As long as epsilon is called with sighat in the second "spot" as
+! call epsilon_function (R1, sighat, spe), then eps(ix,3) = eta(ix).
             eta(:) = eps(:,3)
 
 ! Find the smoothing quantity - here we calculate the long-range effective
@@ -1027,7 +1036,10 @@
 ! Allocate block size
             norb_nu = species(in3)%norb_max
 
-! Allocate the blocks
+! bcnam = Hartree matrix in molecular coordinates
+! dbcnam = derivative of Hartree matrix in molecular coordinates
+! vdbcnam = vectorized derivative of Hartree matrix in molecular coordinates
+! vdbcnax = vectorized derivative of Hartree matrix in crystal coordinates
             allocate (bcnam (norb_mu, norb_nu)); bcnam = 0.0d0
             allocate (bcnax (norb_mu, norb_nu)); bcnax = 0.0d0
             allocate (dbcnam (norb_mu, norb_nu)); dbcnam = 0.0d0
@@ -1036,16 +1048,11 @@
 
 ! Neutral atom piece
             isorp = 0
-            call getDMEs_Fdata_2c (in1, in3, interaction, isorp, z,          &
+            call getDMEs_Fdata_2c (in1, in2, interaction, isorp, z,          &
      &                             norb_mu, norb_nu, bcnam, dbcnam)
 
-! ****************************************************************************
-!
-! FORCES
-! ****************************************************************************
 ! dbcnam is the "scalar" derivative of the matrix; vdbcnam is the "vector" of
-! the matrix
-! When we are done, we get: vdbcnax as the vector derivative of the matrix.
+! the matrix; vdbcnax as the vector derivative of the matrix in crystal.
 
 ! Note that if we are calculating the on-site matrix elements, then the
 ! derivatives should be exactly zero.  This is what Otto referred to as the
@@ -1061,7 +1068,7 @@
 
             call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,    &
      &                    vdbcnam, vdbcnax)
-			pvna_neighbors%Dblock = pvna_neighbors%Dblock + vdbcnax
+			pvna_neighbors%Dblock = pvna_neighbors%Dblock + vdbcnax*P_eq2
 
 ! Charged atom case
             do isorp = 1, species(in2)%nssh
@@ -1081,9 +1088,9 @@
 ! Note the minus sign. d/dr1 = - eta * d/dd.
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
-                  if (z .gt. 1.0d-3) then
+                  if (z .gt. 1.0d-4) then
                     vdbcnam(:,imu,inu) = - eta(:)*dbcnam(imu,inu)
-                    emnpl = pS_neighbors%block/z
+                    emnpl(imu,inu) = pS_neighbors%block(imu,inu)/z
                     vdemnpl(:,imu,inu) = pS_neighbors%Dblock(:,imu,inu)/z   &
      &                                  + eta(:)*pS_neighbors%block(imu,inu)/z**2
                   end if
@@ -1097,7 +1104,7 @@
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
                   pvna_neighbors%Dblock(:,imu,inu) = pvna_neighbors%Dblock(:,imu,inu) &
-     &          + (- eta(:)*Dsmooth*bcnax(imu,inu) + smooth*vdbcnax(:,imu,inu)        &
+     &          + P_eq2*(- eta(:)*Dsmooth*bcnax(imu,inu) + smooth*vdbcnax(:,imu,inu)  &
      &             + eta(:)*Dsmooth*emnpl(imu,inu) + (1 - smooth)*vdemnpl(:,imu,inu))*dQ
                 end do
               end do

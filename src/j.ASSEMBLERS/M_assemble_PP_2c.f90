@@ -176,6 +176,7 @@
             call getMEs_Fdata_2c (in1, in2, interaction, isubtype, z,        &
      &                            norb_mu, norb_nu, svnlm)
             call rotate_PP (in1, in2, eps, norb_mu, norb_nu, svnlm, svnlx)
+
             psvnl_neighbors%block = svnlx
 
             deallocate (svnlm, svnlx)
@@ -271,16 +272,21 @@
 ! ===========================================================================
         allocate (s%vnl(s%natoms))
         do iatom = 1, s%natoms
+          in1 = s%atom(iatom)%imass
+          norb_mu = species(in1)%norb_max
+
+          ! cut some lengthy notation
           pvnl=>s%vnl(iatom)
           num_neigh = s%neighbors_PPp(iatom)%neighn
           allocate (pvnl%neighbors(num_neigh))
-          in1 = s%atom(iatom)%imass
-          norb_mu = species(in1)%norb_max
+
           do ineigh = 1, num_neigh   !  <==== loop over i's neighbors
-            pvnl_neighbors=>pvnl%neighbors(ineigh)
             jatom = s%neighbors_PPp(iatom)%neigh_j(ineigh)
             in2 = s%atom(jatom)%imass
             norb_nu = species(in2)%norb_max
+
+            ! cut some lengthy notation
+            pvnl_neighbors=>pvnl%neighbors(ineigh)
             allocate (pvnl_neighbors%block(norb_mu, norb_nu))
             pvnl_neighbors%block = 0.0d0
           end do
@@ -325,7 +331,7 @@
                 do ncc = 1, species(in2)%norb_PP_max
                   PPx(imu,inu) = PPx(imu,inu)                                &
      &             + cl_value(ncc)*psvnl_neighbors%block(imu,ncc)            &
-     &                      *psvnl_neighbors%block(inu,ncc)
+     &                            *psvnl_neighbors%block(inu,ncc)
                 end do
               end do
             end do
@@ -366,7 +372,7 @@
 ! Case 1. PP is iatom.  <i | VNL(i) |j>.
             if (iatom .eq. jatom .and. mbeta .eq. 0) then ! do nothing
               if (s%neighbors_PPx_self(iatom) .ne. ineigh) then
-                write (*,*) 'neighbors_PPx_self(iatom) .ne. ineigh',         &
+                write (*,*) ' neighbors_PPx_self(iatom) .ne. ineigh',        &
      &                       s%neighbors_PPx_self(iatom), ineigh
                 stop
               end if ! if(neighPP_self)
@@ -415,18 +421,21 @@
         do iatom = 1,s%natoms
           ! cut some lengthy notation
           pvnl => s%vnl(iatom)
+          psvnl1 => s%svnl(iatom)
 
           in1 = s%atom(iatom)%imass
           norb_mu =  species(in1)%norb_max
-          matom = s%neighbors_PPp_self(iatom)
+          num_neigh = s%neighbors_PP(iatom)%neighn
 
 ! Loop over the neighbors of each iatom.
-          num_neigh = s%neighbors_PP(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             mbeta = s%neighbors_PP(iatom)%neigh_b(ineigh)
             jatom = s%neighbors_PP(iatom)%neigh_j(ineigh)
             in2 = s%atom(jatom)%imass
             norb_nu = species(in2)%norb_max
+
+            ! cut some lengthy notation
+            psvnl2=>s%svnl(jatom)
 
 ! if r1 .ne. r2, then this is a case where the potential is located
 ! at one of the sites of a wavefunction (ontop case).
@@ -446,12 +455,10 @@
 
 ! Now the second case. <i | V(j) | j>.
 ! Looking for <phi_j|Psi_j>, what is jneigh of jatom itself in the nPPx list
-              ! cut some lengthy notation
-              psvnl1 => s%svnl(iatom)
-              psvnl1_neighbors => psvnl1%neighbors(ineigh)
-
               mneigh_self = s%neighbors_PP_self(jatom)
-              psvnl2 => s%svnl(jatom)
+
+              ! cut some lengthy notation
+              psvnl1_neighbors => psvnl1%neighbors(ineigh)
               psvnl2_neighbors => psvnl2%neighbors(mneigh_self)
 
 ! Now we combine and sum:
@@ -470,7 +477,7 @@
               kneigh = s%neighbors_PP(iatom)%map(ineigh)
               pvnl_neighbors => pvnl%neighbors(kneigh)
 
-! Assemble the global Matrix
+! Assemble the global matrix
               pvnl_neighbors%block = pvnl_neighbors%block + PPx
 
               deallocate(PPx)
@@ -480,6 +487,7 @@
 ! End loop over iatom and its neighbors - jatom.
           end do ! do ineigh
         end do ! do iatom
+
 
 ! Deallocate Arrays
 ! ===========================================================================

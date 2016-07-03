@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2012
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -232,8 +232,7 @@
                 ! read the actual fdata
                 do iy = 1, pFdata_cell%ny    ! loop over bondlengths
                   do ix = 1, pFdata_cell%nx    ! loop over 3rd atom distance
-                    read (12,*) (pFdata_cell%Fdata_3c(ix, iy, iME),           &
-     &                                                iME = 1, nME3c_max)
+                    read (12,*) (pFdata_cell%Fdata_3c(ix, iy, iME), iME = 1, nME3c_max)
                   end do
                 end do
                 close (12)
@@ -249,8 +248,7 @@
                 ! read the mapping (mu,nu,mvalue)
                 read (13,*) (pFdata_cell%mu_3c(iindex), iindex = 1, nME3c_max)
                 read (13,*) (pFdata_cell%nu_3c(iindex), iindex = 1, nME3c_max)
-                read (13,*)                                                   &
-     &                 (pFdata_cell%mvalue_3c(iindex), iindex = 1, nME3c_max)
+                read (13,*) (pFdata_cell%mvalue_3c(iindex), iindex = 1, nME3c_max)
               end do ! datafile for (ispecies, jspecies, kspecies)
               close (11)
               close (13)
@@ -334,7 +332,7 @@
 ! ===========================================================================
 ! Set up Legendre polynomials
         cost2 = cost**2
-        sint = sqrt(max(0.0d0, 1.0d0 - cost2))
+        sint = sqrt(max(1.0d-5, 1.0d0 - cost2))
         p(0) = 1.0d0
         p(1) = cost
         p(2) = 0.5d0*(3.0d0*cost2 -1.0d0)
@@ -595,39 +593,33 @@
 ! Subroutine Declaration
 ! ===========================================================================
         subroutine getDMEs_Fdata_3c (ispecies, jspecies, kspecies, iint, isub,&
-     &                              x, y, norb_mu, norb_nu, cost, rhat, sighat, &
-     &                                   hmbox, dphmbox, dxhmbox, dyhmbox)
+     &                               x, y, norb_mu, norb_nu, cost, rhat,      &
+     &                               sighat, hmbox, dphmbox, dxhmbox, dyhmbox)
         implicit none
 
 ! Argument Declaration and Description
 ! ===========================================================================
 ! Input
-        integer, intent(in) :: ispecies, jspecies, kspecies         !< species
-        integer, intent(in) :: iint, isub            !< integral type, subtype
-        integer, intent(in) :: norb_mu, norb_nu      !< FIXME: What am I?
+        integer, intent (in) :: ispecies, jspecies, kspecies         !< species
+        integer, intent (in) :: iint, isub            !< integral type, subtype
+        integer, intent (in) :: norb_mu, norb_nu
 
-        real, intent(in) :: x, y                     !< distances between pairs
-        real, intent(in) :: cost                     !< cosine bond-charge angle
+        real, intent (in) :: x, y                     !< distances between pairs
+        real, intent (in) :: cost                     !< cosine bond-charge angle
         real, intent (in), dimension (3) :: rhat
         real, intent (in), dimension (3) :: sighat
 
 ! Output
-        real, intent(out), dimension (norb_mu, norb_nu) :: hmbox !< FIXME
-        real, intent(out), dimension (norb_mu, norb_nu) :: Dphmbox !< FIXME
-        real, intent(out), dimension (norb_mu, norb_nu) :: Dxhmbox !< FIXME
-        real, intent(out), dimension (norb_mu, norb_nu) :: Dyhmbox !< FIXME
+        real, intent (out), dimension (norb_mu, norb_nu) :: hmbox
+        real, intent (out), dimension (norb_mu, norb_nu) :: Dphmbox
+        real, intent (out), dimension (norb_mu, norb_nu) :: Dxhmbox
+        real, intent (out), dimension (norb_mu, norb_nu) :: Dyhmbox
 
 ! Variable Declaration and Description
 ! ===========================================================================
         integer iindex, imu, inu               !< counters for building matrix
         integer itheta                         !< which angle?
         integer mvalue                         !< value of quantum number m
-!        integer ix                             !< which dimenstion, x, y or z
-
-!        real amt, bmt
-!        real, dimension (3, 3) :: eps
-!        real, dimension (3, 3, 3) :: depsA
-!        real, dimension (3, 3, 3) :: depsB
 
         real sint                              !< sin of bond-charge angle
         real cost2                             !< cost**2
@@ -642,21 +634,14 @@
         type(T_Fdata_cell_3c), pointer :: pFdata_cell
         type(T_Fdata_bundle_3c), pointer :: pFdata_bundle
 
-!Temp until I discuss Forces Storage with the Lewis
-!        real, allocatable :: f3naMa(:, :, :)
-!        real, allocatable :: f3naMb(:, :, :)
-!        real, allocatable :: f3naXa(:, :, :)
-!        real, allocatable :: f3naXb(:, :, :)
-!        real, allocatable :: f3naXc(:, :, :)
-
 ! Procedure
 ! ===========================================================================
 ! Set up Legendre polynomials
-        if (.FALSE.) cost2 = rhat(1)
-        if (.FALSE.) cost2 = sighat(1)
+        if (.false.) cost2 = rhat(1)
+        if (.false.) cost2 = sighat(1)
 
         cost2 = cost**2
-        sint = sqrt(max(0.0d0, 1.0d0 - cost2))
+        sint = sqrt(max(1.0d-5, 1.0d0 - cost2))
         p(0) = 1.0d0
         p(1) = cost
         p(2) = 0.5d0*(3.0d0*cost2 -1.0d0)
@@ -682,17 +667,16 @@
         DxFdata = 0.0d0
         DyFdata = 0.0d0
 
-
         ! loop over theta
         do itheta = 1, P_maxtheta
           pFdata_cell =>                                                     &
-     &     pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(iint,isub,itheta))
-          call addDMEs_Fdata_3c (pFdata_cell, x, y, p(itheta - 1),            &
-     &                dp(itheta - 1), pFdata_cell%nME, DpFdata, DxFdata, DyFdata, &
-     &                                                                   Fdata)
+     &      pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(iint,isub,itheta))
+          call addDMEs_Fdata_3c (pFdata_cell, x, y, p(itheta - 1),           &
+     &                           dp(itheta - 1), pFdata_cell%nME, DpFdata,   &
+     &                           DxFdata, DyFdata, Fdata)
         end do
 
-        ! recover matrices          !BaZ- I may need to keep these in LIST form for the moment.
+        ! recover matrices
         Dphmbox = 0.0d0
         Dxhmbox = 0.0d0
         Dyhmbox = 0.0d0
@@ -704,34 +688,15 @@
           if (mvalue .ne. 1) then
             hmbox(imu,inu) = Fdata(iindex)
             Dphmbox(imu,inu) = DpFdata(iindex)
-            Dxhmbox(imu,inu) = DpFdata(iindex)
-            Dyhmbox(imu,inu) = DpFdata(iindex)
+            Dxhmbox(imu,inu) = DxFdata(iindex)
+            Dyhmbox(imu,inu) = DyFdata(iindex)
           else
-          if (sint .eq. 0.0d0) then
-              write (*,*) ' Dividing by zero (sint = 0) in getDMEs_Fdata_3c '
-              stop
-          end if
             hmbox(imu,inu) = Fdata(iindex)*sint
             Dphmbox(imu,inu) = DpFdata(iindex)*sint - cost*Fdata(iindex)/sint
-            Dxhmbox(imu,inu) = DpFdata(iindex)*sint
-            Dyhmbox(imu,inu) = DpFdata(iindex)*sint
+            Dxhmbox(imu,inu) = DxFdata(iindex)*sint
+            Dyhmbox(imu,inu) = DyFdata(iindex)*sint
           end if
         end do
-
-! If this is made as a drop-in replace, I should build hmbox here too.
-
-!        hmbox = 0.0d0
-!        do iindex = 1, pFdata_cell%nME
-!          imu = pFdata_cell%mu_3c(iindex)
-!          inu = pFdata_cell%nu_3c(iindex)
-!          mvalue = pFdata_cell%mvalue_3c(iindex)
-!          if (mvalue .ne. 1) then
-!            hmbox(imu,inu) = Fdata(iindex)
-!          else
-!            hmbox(imu,inu) = Fdata(iindex)*sint
-!          end if
-!        end do
-
 
 ! Deallocate Arrays
 ! ===========================================================================
@@ -771,7 +736,7 @@
 ! (304) 293-5732 (FAX)
 ! ===========================================================================
         subroutine addDMEs_Fdata_3c (pFdata_cell, x, y, ptheta, Dptheta, &
-        &                               nME, Dpresult, Dxresult, Dyresult, result)
+        &                            nME, Dpresult, Dxresult, Dyresult, result)
         implicit none
 
 ! Argument Declaration and Description
@@ -791,9 +756,7 @@
         real, intent(inout), dimension (nME) :: Dpresult !< FIXME
         real, intent(inout), dimension (nME) :: result !< FIXME
 
-!        real, intent(inout), dimension (nME) :: result !< FIXME
        real, dimension (nME) :: interim !< FIXME
-
 
 ! Variable Declaration and Description
 ! ===========================================================================
@@ -819,13 +782,13 @@
         real, parameter :: P_small = 1.0d0-8
         nME3c_max = pFdata_cell%nME
 
-          ! Allocate the arrays used in Method 3
-          allocate (bb0(nME3c_max), bb1(nME3c_max), bb2(nME3c_max))
-          allocate (bb3(nME3c_max), f1m1(nME3c_max), f1m2(nME3c_max))
-          allocate (f1m3(nME3c_max), f0p3(nME3c_max), f0p6(nME3c_max))
-          allocate (f1p3(nME3c_max), f1p6(nME3c_max), f2p1(nME3c_max))
-          allocate (g(-1:2,nME3c_max))
-          allocate (gp(-1:2,nME3c_max))
+        ! Allocate the arrays used in Method 3
+        allocate (bb0(nME3c_max), bb1(nME3c_max), bb2(nME3c_max))
+        allocate (bb3(nME3c_max), f1m1(nME3c_max), f1m2(nME3c_max))
+        allocate (f1m3(nME3c_max), f0p3(nME3c_max), f0p6(nME3c_max))
+        allocate (f1p3(nME3c_max), f1p6(nME3c_max), f2p1(nME3c_max))
+        allocate (g(-1:2,nME3c_max))
+        allocate (gp(-1:2,nME3c_max))
 
 ! Procedure
 ! ===========================================================================
@@ -847,9 +810,9 @@
 
 ! ***************************************************************************
 ! Adaptive interpolation - estimate gradient:           !Baz, think this should be an array, methinks. Yes Fdata_3c is (ix, iy, iME)
-        allocate (gx (nME)) ; gx = 0.0d0
-        allocate (gy (nME)) ; gy = 0.0d0
-        allocate (gg (nME)) ; gg = 0.0d0
+        allocate (gx (nME)); gx = 0.0d0
+        allocate (gy (nME)); gy = 0.0d0
+        allocate (gg (nME)); gg = 0.0d0
 
         gx = (pFdata_cell%Fdata_3c(ix + 1, iy, :)                             &
      &        - pFdata_cell%Fdata_3c(ix, iy, :))/dx
@@ -903,19 +866,14 @@
      &            - 2.0d0*pFdata_cell%Fdata_3c(ix,iy,:))*py                              &
      &            - 0.5d0*(pFdata_cell%Fdata_3c(ix,iy-1,:) - pFdata_cell%Fdata_3c(ix,iy+1,:)))/dy)
 
-!     dQ_Ldx = ((fun(1,1) - fun(1,0) - fun(0,1) + fun(0,0))*py           &
+!          dQ_Ldx = ((fun(1,1) - fun(1,0) - fun(0,1) + fun(0,0))*py           &
 !     &            + (fun(-1,0) + fun(1,0) - 2.0d0*fun(0,0))*px               &
 !     &            - 0.5d0*(fun(-1,0) - fun(1,0)))/hx
 !          dQ_Ldy = ((fun(1,1) - fun(1,0) - fun(0,1) + fun(0,0))*px           &
 !     &            + (fun(0,-1) + fun(0,1) - 2.0d0*fun(0,0))*py               &
 !     &            - 0.5d0*(fun(0,-1) - fun(0,1)))/hy
-
-
-
-
-
-
         end where
+
 
 ! METHOD 3
 ! Interpolate one direction, then interpolate using these values to get
@@ -991,8 +949,7 @@
 
           end where
 
-
-!dQ_Ldx = ((3*bb3*px + 2*bb2)*px + bb1)/(36.0d0*hx)
+!           dQ_Ldx = ((3*bb3*px + 2*bb2)*px + bb1)/(36.0d0*hx)
 !
 !           f1m1 = gp(-1)
 !           f1m2 = 2*f1m1
@@ -1014,24 +971,21 @@
 !           dQ_Ldy = (((bb3*px + bb2)*px + bb1)*px + bb0)/(36.0d0*hy)
 
 
-
  ! Deallocate the arrays used in Method 3.
           deallocate (bb0, bb1, bb2, bb3)
           deallocate (f1m1, f1m2, f1m3, f0p3, f0p6)
           deallocate (f1p3, f1p6, f2p1, g)
+
 ! A final note, if you are interested in splines, you should start with
-! "Handbook on SPLINES for the User"
-! by Eugene V. Shikin and Alexander I. Plis.  1995, CRC Press.  Most other
-! books on slines and bivariate interpolation are nothing but proofs and
-! abstract math, but this one gives the real equations you need to get
-! the actual work done.
+! "Handbook on SPLINES for the User" by Eugene V. Shikin and
+! Alexander I. Plis.  1995, CRC Press.  Most other books on slines and
+! bivariate interpolation are nothing but proofs and abstract math, but
+! this one gives the real equations you need to get the actual work done.
 
 ! Deallocate Arrays
 ! ===========================================================================
 ! None
         deallocate (gx, gy, gg)
-
-
 
 ! Format Statements
 ! ===========================================================================
@@ -1039,6 +993,7 @@
 
         return
         end subroutine addDMEs_Fdata_3c
+
 
 ! ===========================================================================
 ! destroy_Fdata_3c

@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2013
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -176,6 +176,7 @@
           write (22,200) (s%kpoints(ikpoint)%eigen(imu), imu = 1, s%norbitals)
         end do
         close (unit = 22)
+
 ! ****************************************************************************
 !
 !                      C O M P U T E    D E N S I T I E S

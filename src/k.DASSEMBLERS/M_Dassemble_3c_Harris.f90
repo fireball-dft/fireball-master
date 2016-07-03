@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2015
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -91,7 +91,6 @@
         use M_assemble_3c
         use M_density_matrix
 
-
 ! Type Declaration
 ! ===========================================================================
 ! None
@@ -143,24 +142,22 @@
         integer ineigh, mneigh           !< counter over neighbors
         integer in1, in2, in3            !< species numbers
         integer interaction, isorp       !< which interaction and subtype
-
+        integer imu, inu, iindex         !< indexing counters
         integer norb_mu, norb_nu         !< size of the block for the pair
 
         real z                           !< distance between r1 and r2
         real x, cost                     !< dnabc and angle
 
-        integer ix                       !< dimension - x y or z
-
         real, dimension (3, 3) :: eps    !< the epsilon matrix
-        real, dimension (3) :: r1, r2, r3, r12, r21!< positions
+        real, dimension (3) :: r1, r2, rna  !< positions - iatom, jatom, ialpha
+        real, dimension (3) :: r12, r21  !< vectors
         real, dimension (3) :: sighat    !< unit vector along r2 - r1
-        real, dimension (3) :: rhat      !< unit vector along bc - r3
+        real, dimension (3) :: rhat      !< unit vector along bc - rna
 
         real, dimension (3, 3, 3) :: depsA  !< the Depsilon matrix for the bc
         real, dimension (3, 3, 3) :: depsB  !< the Depsilon matrix for the na
 
         real, dimension (3) :: amt, bmt
-        integer imu, inu, mvalue, iindex
 
 ! bcnam = Hartree matrix in molecular coordinates
 ! bcnax = Hartree matrix in crystal coordinates
@@ -168,7 +165,6 @@
 ! vdbcnam = vectorized derivative of Hartree matrix in molecular coordinates
 ! vdbcnax = vectorized derivative of Hartree matrix in crystal coordinates
         real, dimension (:, :), allocatable :: bcnam
-        real, dimension (:, :), allocatable :: bcnax
 
         real, dimension (:, :), allocatable :: dpbcnam
         real, dimension (:, :), allocatable :: dxbcnam
@@ -184,13 +180,21 @@
         type(T_Fdata_cell_3c), pointer :: pFdata_cell
         type(T_Fdata_bundle_3c), pointer :: pFdata_bundle
 
+        ! forces
+        type(T_forces), pointer :: pfalpha
+        type(T_forces), pointer :: pfi
+        type(T_forces), pointer :: pfj
+
+        ! density matrix stuff
+        type(T_assemble_neighbors), pointer :: pdenmat
+        type(T_assemble_block), pointer :: pRho_neighbors
+
         interface
           function distance (a, b)
             real distance
             real, intent (in), dimension (3) :: a, b
           end function distance
         end interface
-
 
 ! Allocate Arrays
 ! ===========================================================================
@@ -201,9 +205,12 @@
 ! Loop over the atoms in the central cell.
         do ialpha = 1, s%natoms
           in3 = s%atom(ialpha)%imass
-          r3 = s%atom(ialpha)%ratom
+          rna = s%atom(ialpha)%ratom
 
-          ! loop over the common neigbor pairs of ialp
+          ! cut some lengthy notation
+          pfalpha=>s%forces(ialpha)
+
+          ! loop over the common neighbor pairs of ialp
           do ineigh = 1, s%neighbors(ialpha)%ncommon
             mneigh = s%neighbors(ialpha)%neigh_common(ineigh)
             if (mneigh .ne. 0) then
@@ -219,20 +226,17 @@
               in2 = s%atom(jatom)%imass
               norb_nu = species(in2)%norb_max
 
-! Allocade DFdata blocks
-              allocate (s%vna(iatom)%neighbors(mneigh)%aDblock(3, norb_mu, norb_nu))
-              s%vna(iatom)%neighbors(mneigh)%aDblock = 0.00
-              allocate (s%vna(iatom)%neighbors(mneigh)%bDblock(3, norb_mu, norb_nu))
-              s%vna(iatom)%neighbors(mneigh)%bDblock = 0.00
-              allocate (s%vna(iatom)%neighbors(mneigh)%cDblock(3, norb_mu, norb_nu))
-              s%vna(iatom)%neighbors(mneigh)%cDblock = 0.00
+              ! cut lengthy notation
+              pfi=>s%forces(iatom); pfj=>s%forces(jatom)
+
+              ! density matrix
+              pdenmat=>s%denmat(iatom); pRho_neighbors=>pdenmat%neighbors(mneigh)
 
 ! SET-UP STUFF
 ! ****************************************************************************
 ! Find r21 = vector pointing from r1 to r2, the two ends of the bondcharge.
 ! This gives us the distance dbc (or y value in the 2D grid).
               r21 = r2 - r1
-
               z = distance (r1, r2)
 
               ! unit vector in sigma direction.
@@ -245,10 +249,10 @@
               end if
 
 ! ****************************************************************************
-! Find rnabc = vector pointing from center of bondcharge to r3
-! This gives us the distance dnabc (or x value in the 2D grid).
+! Find rnabc = vector pointing from center of bondcharge to rna
+! This gives us the distance dnabc.
               r12 = 0.5d0*(r1 + r2)
-              x = distance (r12, r3)
+              x = distance (r12, rna)
 
               ! unit vector in rnabc direction.
               if (x .lt. 1.0d-05) then
@@ -256,19 +260,14 @@
                 rhat(2) = 0.0d0
                 rhat(3) = 0.0d0
               else
-                rhat = (r3 - 0.5d0*(r1 + r2))/x
+                rhat = (rna - 0.5d0*(r1 + r2))/x
               end if
-
               cost = dot_product(sighat, rhat)
-              if (abs(cost) - 1.0d0 .lt. 0.10d0) then
-                cycle
-              end if
-
               call epsilon_function (rhat, sighat, eps)
 
 ! dera3 = depsA = deps/dratm in the 3-center system
 ! der13 = depsB = deps/dr1 in the 3-center system
-              call Depsilon_3c (r1, r2, r21, z, r3, rhat, eps, depsA, depsB)
+              call Depsilon_3c (r1, r2, r21, z, rna, rhat, eps, depsA, depsB)
 
 ! For now we just do the neutral atom interactions.
 ! Charged atom interactions are assembled in assemble_ca_3c.f
@@ -288,56 +287,50 @@
               isorp = 0
 
 ! Allocate block arrays
-              allocate(bcnam(norb_mu, norb_nu)) ; bcnam = 0.00
-              allocate(bcnax(norb_mu, norb_nu)) ; bcnax = 0.00
-              allocate(dpbcnam(norb_mu, norb_nu)) ; dpbcnam = 0.00
-              allocate(dxbcnam(norb_mu, norb_nu)) ; dxbcnam = 0.00
-              allocate(dybcnam(norb_mu, norb_nu)) ; dybcnam = 0.00
-
+              allocate (bcnam (norb_mu, norb_nu)); bcnam = 0.00
+              allocate (dpbcnam (norb_mu, norb_nu)); dpbcnam = 0.00
+              allocate (dxbcnam (norb_mu, norb_nu)); dxbcnam = 0.00
+              allocate (dybcnam (norb_mu, norb_nu)); dybcnam = 0.00
               call getDMEs_Fdata_3c (in1, in2, in3, interaction, isorp, x,     &
-     &                              z, norb_mu, norb_nu, cost, rhat, sighat,   &
-     &                                   bcnam, dpbcnam, dxbcnam, dybcnam)
-              ! Rotate into crystal coordinates
-              call rotate (in1, in2, eps, norb_mu, norb_nu, bcnam, bcnax)
+     &                               z, norb_mu, norb_nu, cost, rhat, sighat,  &
+     &                               bcnam, dpbcnam, dxbcnam, dybcnam)
 
-              allocate (f3naMa(3, norb_mu, norb_nu))
-              allocate (f3naMb(3, norb_mu, norb_nu))
-              allocate (f3naXa(3, norb_mu, norb_nu))
-              allocate (f3naXb(3, norb_mu, norb_nu))
-              allocate (f3naXc(3, norb_mu, norb_nu))
+              allocate (f3naMa(3, norb_mu, norb_nu)); f3naMa = 0.0d0
+              allocate (f3naMb(3, norb_mu, norb_nu)); f3naMb = 0.0d0
+              allocate (f3naXa(3, norb_mu, norb_nu)); f3naXa = 0.0d0
+              allocate (f3naXb(3, norb_mu, norb_nu)); f3naXb = 0.0d0
+              allocate (f3naXc(3, norb_mu, norb_nu)); f3naXc = 0.0d0
 
 ! ***************************************************************************
 ! Now consider the components of the different forces which is determined
 ! by whether or not the force is with respect to atom 3 or atom 1.
-              do ix = 1, 3
 
 ! The first piece will be the force with respect to atom 3.
-                if (x .gt. 1.0d-5) then
-                  amt(ix) = (sighat(ix) - cost*rhat(ix))/x
-                else
-                  amt = 0.0d0
-                end if
-
-                pFdata_bundle => Fdata_bundle_3c(in1, in2, in3)
-                pFdata_cell =>                                               &
-     &          pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(interaction,isorp,1))
-
-                do iindex = 1, pFdata_cell%nME
-                  imu = pFdata_cell%mu_3c(iindex)
-                  inu = pFdata_cell%nu_3c(iindex)
-                  mvalue = pFdata_cell%mvalue_3c(iindex)
-! Now recover f3naMa which is a two-dimensional array
-                  f3naMa(ix,imu,inu) = rhat(ix)*Dxbcnam(imu,inu)             &
-      &            + amt(ix)*Dpbcnam(imu,inu)
+              if (x .gt. 1.0d-5) then
+                amt = (sighat - cost*rhat)/x
+              else
+                amt = 0.0d0
+              end if
 
 ! The second piece will be the force with respect to atom 1.
-                  bmt(ix) = (cost*sighat(ix) - rhat(ix))/z
-! Now recover f3naMb which is a two-dimensional array
-                  f3naMb(ix,imu,inu) = - sighat(ix)*dybcnam(imu, inu)        &
-     &             + bmt(ix)*dpbcnam(imu, inu) - f3naMa(ix,imu,inu)/2.0d0
+              bmt = (cost*sighat - rhat)/z
 
-                end do !iindex
-              end do !ix
+              pFdata_bundle => Fdata_bundle_3c(in1, in2, in3)
+              pFdata_cell =>                                                &
+     &          pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(interaction,isorp,1))
+
+              ! loop over matrix elements
+              do iindex = 1, pFdata_cell%nME
+                imu = pFdata_cell%mu_3c(iindex)
+                inu = pFdata_cell%nu_3c(iindex)
+
+! Now recover f3naMa which is a three-dimensional array
+                f3naMa(:,imu,inu) = rhat*dxbcnam(imu,inu) + amt*dpbcnam(imu,inu)
+
+! Now recover f3naMb which is a three-dimensional array
+                f3naMb(:,imu,inu) = - sighat*dybcnam(imu,inu)               &
+     &           + bmt*dpbcnam(imu,inu) - f3naMa(:,imu,inu)/2.0d0
+              end do ! end loop over matrix elements
 
 ! ***************************************************************************
 ! Convert to Crystal Coordinates
@@ -360,34 +353,35 @@
 ! We do the - sign for forces at the end.
 ! ***************************************************************************
 ! Force on the neutral atom with respect to atom 3 (f3naMa).
-              call Drotate (in1, in2, eps, depsA, norb_mu, norb_nu,            &
-     &              bcnam, f3naMa, f3naXa)
+              call Drotate (in1, in2, eps, depsA, norb_mu, norb_nu,          &
+     &                      bcnam, f3naMa, f3naXa)
 
 ! Force on the neutral atom with respect to atom 1 (f3naMb).
-              call Drotate (in1, in2, eps, depsB, norb_mu, norb_nu,            &
-     &              bcnam, f3naMb, f3naXb)
+              call Drotate (in1, in2, eps, depsB, norb_mu, norb_nu,          &
+     &                      bcnam, f3naMb, f3naXb)
 
 ! Make things force-like and determine f3naXc, whcih is found from Newtons Laws:
-              f3naXa(:,:,:) = - f3naXa(:,:,:)
-              f3naXb(:,:,:) = - f3naXb(:,:,:)
-              f3naXc(:,:,:) = - f3naXa(:,:,:) - f3naXb(:,:,:)
+              f3naXa = - f3naXa
+              f3naXb = - f3naXb
+              f3naXc = - f3naXa - f3naXb
 
-              s%vna(iatom)%neighbors(mneigh)%aDblock =                         &
-     &              s%vna(iatom)%neighbors(mneigh)%aDblock + f3naXa*P_eq2
+              do inu = 1, norb_nu
+                do imu = 1, norb_mu
+                  pfalpha%f3naa = pfalpha%f3naa                              &
+      &             + pRho_neighbors%block(imu,inu)*f3naXa(:,imu,inu)
+                  pfi%f3nab = pfi%f3nab                                      &
+      &             + pRho_neighbors%block(imu,inu)*f3naXb(:,imu,inu)
+                  pfj%f3nac = pfj%f3nac                                      &
+      &             + pRho_neighbors%block(imu,inu)*f3naXc(:,imu,inu)
+                end do
+              end do
 
-              s%vna(iatom)%neighbors(mneigh)%bDblock =                         &
-     &              s%vna(iatom)%neighbors(mneigh)%bDblock + f3naXb*P_eq2
-
-              s%vna(iatom)%neighbors(mneigh)%cDblock =                         &
-     &              s%vna(iatom)%neighbors(mneigh)%cDblock + f3naXc*P_eq2
-
-              deallocate (bcnam, bcnax)
-              deallocate (dpbcnam, dxbcnam, dybcnam)
+              deallocate (bcnam, dpbcnam, dxbcnam, dybcnam)
               deallocate (f3naMa, f3naMb)
               deallocate (f3naXa, f3naXb, f3naXc)
-            end if !if (mneigh .ne. 0)
-          end do !ineigh
-        end do !iatom
+            end if ! if (mneigh .ne. 0)
+          end do ! end loop over neighbors
+        end do ! end loop over atoms
 
 ! Deallocate Arrays
 ! ===========================================================================

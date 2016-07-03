@@ -295,7 +295,7 @@
 ! Subroutine Declaration
 ! ===========================================================================
         subroutine getMEs_Fdata_2c (ispecies, jspecies, iint, isub, x,       &
-     &                                 norb_mu, norb_nu, hmbox)
+     &                              norb_mu, norb_nu, hmbox)
         implicit none
 
 ! Argument Declaration and Description

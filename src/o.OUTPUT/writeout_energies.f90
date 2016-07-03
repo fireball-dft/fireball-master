@@ -120,7 +120,8 @@
 
 ! Writing out the energy pieces
         write (t%logfile, *)
-        write (t%logfile, *) ' ---------- T H E  T O T A L  E N E R G Y ----------- '
+        write (t%logfile, '(A)') 'Total Energy'
+        write (t%logfile, '(A)') '------------'
         write (t%logfile, *)
         write (t%logfile, 102) ebs
         write (t%logfile, 103) uii_uee
@@ -131,20 +132,20 @@
         write (t%logfile, 107) etot
 
         ! Total energy per atom
-        etot_per_atom = etot/t%natoms
+        etot_per_atom = etot/s%natoms
         write (t%logfile, 108) etot_per_atom
 
         ! Cohesive Energy
         atomic_energy = 0.0d0
-        do iatom = 1, t%natoms
-          in1 = t%atom(iatom)%imass
+        do iatom = 1, s%natoms
+          in1 = s%atom(iatom)%imass
           atomic_energy = atomic_energy + species(in1)%atomicE
         end do
-        write (t%logfile,109) atomic_energy
-        write (t%logfile,110) etot - atomic_energy
-        write (t%logfile,*)
-        write (t%logfile,111) (etot - atomic_energy)/t%natoms
-        write (t%logfile,*) ' ----------------------------------------------------- '
+        write (s%logfile, 109) atomic_energy
+        write (s%logfile, 110) etot - atomic_energy
+        write (s%logfile, *)
+        write (s%logfile, 111) (etot - atomic_energy)/s%natoms
+        write (s%logfile, *)
 
 ! Writeout the components of the energies if requested.
         if (iwriteout_energies .eq. 1) then

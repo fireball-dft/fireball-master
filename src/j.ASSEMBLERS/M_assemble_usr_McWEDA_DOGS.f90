@@ -129,7 +129,7 @@
 ! Initialize logfile
         logfile = s%logfile
         write (logfile,*)
-!        write (logfile,*) ' Welcome to assemble_usr.f! '
+        write (logfile,*) ' Welcome to assemble_usr.f! '
 
 ! Initialize arrays
         u0_tot = 0.0d0

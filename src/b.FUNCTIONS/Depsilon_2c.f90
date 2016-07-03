@@ -75,18 +75,18 @@
         deps = 0.0d0
 
 ! If we are doing an atom, r1=r2. Then set deps2 to zero.
-        dd=sqrt((r2(1)-r1(1))**2+(r2(2)-r1(2))**2+(r2(3)-r1(3))**2)
-        if(dd.lt.1.0d-4)return
-        ddinv=1.0/dd
+        dd = sqrt((r2(1)-r1(1))**2+(r2(2)-r1(2))**2+(r2(3)-r1(3))**2)
+        if (dd.lt.1.0d-4)return
+        ddinv = 1.0d0/dd
 
-        r2mag2= r2(1)**2 + r2(2)**2 + r2(3)**2
-        r2mag=sqrt(r2mag2)
-        r1mag=sqrt(r1(1)**2 + r1(2)**2 + r1(3)**2)
-        crossa(1)=r2(2)*r1(3)-r2(3)*r1(2)
-        crossa(2)=r2(3)*r1(1)-r2(1)*r1(3)
-        crossa(3)=r2(1)*r1(2)-r2(2)*r1(1)
-        crossmag=sqrt(crossa(1)**2+crossa(2)**2+crossa(3)**2)
-        dot=0.e0
+        r2mag2 = r2(1)**2 + r2(2)**2 + r2(3)**2
+        r2mag = sqrt(r2mag2)
+        r1mag = sqrt(r1(1)**2 + r1(2)**2 + r1(3)**2)
+        crossa(1) = r2(2)*r1(3)-r2(3)*r1(2)
+        crossa(2) = r2(3)*r1(1)-r2(1)*r1(3)
+        crossa(3) = r2(1)*r1(2)-r2(2)*r1(1)
+        crossmag = sqrt(crossa(1)**2+crossa(2)**2+crossa(3)**2)
+        dot = 0.e0
         do i=1,3
           dot=dot+r1(i)*r2(i)
         end do

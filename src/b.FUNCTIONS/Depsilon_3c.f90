@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2012
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -107,7 +107,7 @@
           write (11,*) ' sigma - cross - r21 = ', crossmag
           write (11,*) ' setting all 3-center deps to zero '
           close (11)
-         return
+          return
         end if
 
         r2mag2 = r2(1)**2 + r2(2)**2 + r2(3)**2

@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2008
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -126,7 +126,7 @@
 ! Initialize logfile
         logfile = s%logfile
         write (logfile,*)
-!        write (logfile,*) ' Welcome to assemble_usr.f! '
+        write (logfile,*) ' Welcome to assemble_usr.f! '
 
 ! Initialize arrays
         u0_tot = 0.0d0
@@ -169,6 +169,7 @@
             isubtype = 0
             interaction = P_coulomb
             in3 = in2
+
             allocate (coulomb (norb_mu, norb_nu))
             call getMEs_Fdata_2c (in1, in2, interaction, isubtype, z,         &
      &                             norb_mu, norb_nu, coulomb)

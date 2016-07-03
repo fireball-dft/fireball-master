@@ -165,14 +165,9 @@
               norb_nu = species(in2)%norb_max
 
               ! cut some lengthy notation
-              poverlap=>s%overlap(iatom)
-              pdipole_z=>s%dipole_z(iatom)
-              pvna=>s%vna(iatom)
-
-              ! cut some more lengthy notation
-              pS_neighbors=>poverlap%neighbors(mneigh)
-              pdip_neighbors=>pdipole_z%neighbors(mneigh)
-              pvna_neighbors=>pvna%neighbors(mneigh)
+              pvna=>s%vna(iatom); pvna_neighbors=>pvna%neighbors(mneigh)
+              poverlap=>s%overlap(iatom); pS_neighbors=>poverlap%neighbors(mneigh)
+              pdipole_z=>s%dipole_z(iatom); pdip_neighbors=>pdipole_z%neighbors(mneigh)
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -209,9 +204,6 @@
               end if
 
               cost = dot_product(sighat, rhat)
-              if (abs(cost) - 1.0d0 .lt. 0.010d0) then
-                cycle 
-              end if
               call epsilon_function (rhat, sighat, eps)
 
 ! Find the smoothing quantity - here we calculate the long-range effective

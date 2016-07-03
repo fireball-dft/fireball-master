@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2013
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -176,6 +176,7 @@
         integer isorp
         integer idgrid, iqgrid, irgrid      !< counter for grid points
         integer index_2c, nME2c_max         !< basically the number of non-zero
+        integer logfile                     !< writing to which unit
         integer nFdata_cell_2c              !< indexing of interactions
 
         integer l1, m1, n1                  !< quantum  numbers
@@ -234,6 +235,9 @@
 
 ! Procedure
 ! ===========================================================================
+! Initialize logfile
+        logfile = 21
+
 ! Initialize some variables
         isorp = 0
         qmax = sqrt(2.0d0*ecutke/7.62d0)
@@ -310,18 +314,18 @@
               end do
             end do
 
-            write (*,*)
-            write (*,*) ' Normalization in q space for ispecies = ', ispecies
+            write (logfile,*)
+            write (logfile,*) ' Normalization in q space for ispecies = ', ispecies
             do issh = 1, species(ispecies)%nssh
-              write (*,*)
-              write (*,*) ' Shell: ', issh
-              write (*,*)
-              write (*,301) issh
+              write (logfile,*)
+              write (logfile,*) ' Shell: ', issh
+              write (logfile,*)
+              write (logfile,301) issh
               do isplit = 1, 5
-                write (*,302) qsplit(isplit), esplit(isplit), xnormq(issh,isplit)
+                write (logfile,302) qsplit(isplit), esplit(isplit), xnormq(issh,isplit)
               end do
             end do
-            write (*,*)
+            write (logfile,*)
             deallocate (sumq)
             deallocate (xnormq)
           end if
@@ -336,10 +340,10 @@
 !
 ! C A L C U L A T E   K I N E T I C   E N E R G Y
 ! ***************************************************************************
-        write (*,*)
-        write (*,*) ' ******************************************************* '
-        write (*,*) '          K I N E T I C   I N T E R A C T I O N S        '
-        write (*,*) ' ******************************************************* '
+        write (logfile,*)
+        write (logfile,*) ' ******************************************************* '
+        write (logfile,*) '          K I N E T I C   I N T E R A C T I O N S        '
+        write (logfile,*) ' ******************************************************* '
 
 ! We are ready to go
         do ispecies = 1, nspecies
@@ -406,7 +410,7 @@
 ! Some preliminaries. Set up simpson rule factors and eV.
 ! Do a convergence test for d = 0.0
 ! ***************************************************************************
-            write (*,200) species(ispecies)%nZ, species(jspecies)%nZ
+            write (logfile,200) species(ispecies)%nZ, species(jspecies)%nZ
             dr = (wf(ispecies)%rcutoffA_max                                  &
      &            + wf(jspecies)%rcutoffA_max)/real(ndd_ke - 1)
             dmax = (wf(ispecies)%rcutoffA_max + wf(jspecies)%rcutoffA_max)

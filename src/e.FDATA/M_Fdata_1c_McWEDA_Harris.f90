@@ -212,9 +212,7 @@
 ! ===========================================================================
         do ispecies = 1, nspecies
           deallocate (vxc_1c(ispecies)%E)
-          deallocate (vxc_1c(ispecies)%dE)
           deallocate (vxc_1c(ispecies)%V)
-          deallocate (vxc_1c(ispecies)%dV)
         end do
 
 ! Deallocate Arrays

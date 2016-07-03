@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2008
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -297,7 +297,7 @@
 ! Subroutine Declaration
 ! ===========================================================================
         subroutine getMEs_Fdata_2c (ispecies, jspecies, iint, isub, x,     &
-     &                                norb_mu, norb_nu, hmbox)
+     &                              norb_mu, norb_nu, hmbox)
         implicit none
 
 ! Argument Declaration and Description
@@ -491,9 +491,9 @@
         allocate (Fdata(pFdata_cell%nME))
 		dFdatadx = 0.0d0
 		Fdata = 0.0d0
-        !print *, x, P_tolerance
 		xx = 0.00
 		pdenom = 0.00
+
 ! The following should never happen.  Delete them might improve performance
         if (x .lt. 0.0d0) then
           stop ' Error in getDMEs_Fdata_2c: negative x! '
@@ -510,7 +510,6 @@
             inu = pFdata_cell%nu_2c(iindex)
             hmbox(imu,inu) = pFdata_cell%Fdata_2c(1,iindex)
             Dhmbox(imu,inu) = 0.0d0
-            !print *, Dhmbox(imu,inu), 'Dhmbox(imu,inu)'
           end do          
           return
         end if
@@ -564,9 +563,9 @@
               if (kpoint .eq. jpoint) cycle
               if (kpoint .eq. ipoint) cycle
               xprod = xprod * (x - xx(kpoint - ileft))
-            end do !kpoint
+            end do ! kpoint
             xsumoverj = xsumoverj + xprod
-          end do !jpoint
+          end do ! jpoint
 
           dFdatadx = dFdatadx + pFdata_cell%Fdata_2c(ipoint,:)               &
      &                           *pdenom(ipoint - ileft)*xsumoverj

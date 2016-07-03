@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2009
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -167,6 +167,7 @@
         integer igrid                       !< number of grid points
         integer index_2c, nME2c_max         !< basically the number of non-zero
         integer isorp, ideriv               !< the number of different types
+        integer logfile                     !< writing to which unit
         integer nFdata_cell_2c              !< indexing of interactions
 
         real dmax                           !< max distance between two centers
@@ -186,10 +187,13 @@
 
 ! Procedure
 ! ============================================================================
-        write (*,*)
-        write (*,*) ' ******************************************************* '
-        write (*,*) '        D I P O L E ( Z )   I N T E R A C T I O N S      '
-        write (*,*) ' ******************************************************* '
+! Initialize logfile
+        logfile = 21
+
+        write (logfile,*)
+        write (logfile,*) ' ******************************************************* '
+        write (logfile,*) '        D I P O L E ( Z )   I N T E R A C T I O N S      '
+        write (logfile,*) ' ******************************************************* '
 
 ! Assign values to the unrequired variables for this specific interaction.
         isorp = 0
@@ -248,7 +252,7 @@
      &                    index_2c = 1, nME2c_max)
 
 ! Loop over grid
-            write (*,200) species(ispecies)%nZ, species(jspecies)%nZ
+            write (logfile,200) species(ispecies)%nZ, species(jspecies)%nZ
             do igrid = 1, ndd_dipole_z
               d = d + drr
 

@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2013
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -267,11 +267,10 @@
 ! Allocate Arrays
 ! ===========================================================================
         allocate (s%kinetic(s%natoms))
-        !open(unit= 51, file="/home/accounts/ahernandez/thunder2016/fireball-fireball/Hy.dimer/kEner.txt")
+
 ! Procedure
 ! ===========================================================================
 ! Loop over the atoms in the central cell.
-!        open(unit= 52, file="/home/accounts/ahernandez/thunder2016/fireball-fireball/Hy.trio/kener.txt")
         do iatom = 1, s%natoms
           ! cut some lengthy notation
           pkinetic=>s%kinetic(iatom)
@@ -322,11 +321,8 @@
             allocate (tx (norb_mu, norb_nu)); tx = 0.0d0
             call getMEs_Fdata_2c (in1, in2, interaction, isorp, z,           &
      &                            norb_mu, norb_nu, tm)
-            !if (iatom .lt. jatom) then
-            !  write (52,*) iatom, jatom, tm
-            !end if
             call rotate (in1, in3, eps, norb_mu, norb_nu, tm, tx)
-            !write (51,*) iatom, jatom, tm, tx
+
             pK_neighbors%block = tx
             deallocate (tm, tx)
           end do ! end loop over neighbors
@@ -438,7 +434,7 @@
 ! Parameters and Data Declaration
 ! ===========================================================================
 ! None
-        !open(unit= 43, file= "/home/accounts/ahernandez/thunder2016/fireball-fireball/H2O_rotation/vna.txt")
+
 ! Variable Declaration and Description
 ! ===========================================================================
         integer iatom, ineigh           !< counter over atoms and neighbors
@@ -485,6 +481,7 @@
         do iatom = 1, s%natoms
           ! cut some lengthy notation
           pvna=>s%vna(iatom)
+
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
@@ -542,21 +539,22 @@
 
               allocate (bcnam (norb_mu, norb_nu)); bcnam = 0.0d0
               allocate (bcnax (norb_mu, norb_nu)); bcnax = 0.0d0
-              call getMEs_Fdata_2c (in1, in3, interaction, isorp, z,         &
+              call getMEs_Fdata_2c (in1, in2, interaction, isorp, z,         &
      &                              norb_mu, norb_nu, bcnam)
               call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
-              !write(43,*) bcnam, bcnax
+
               pvna_neighbors%blocko = pvna_neighbors%blocko + bcnax*P_eq2
 
 ! For the vna_ontopR case, the potential is in the second atom - right (iatom):
               isorp = 0
               interaction = P_vna_ontopR
               in3 = in2
-              call getMEs_Fdata_2c (in1, in3, interaction, isorp, z,         &
+
+              call getMEs_Fdata_2c (in1, in2, interaction, isorp, z,         &
      &                              norb_mu, norb_nu, bcnam)
               call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
+
               pvna_neighbors%blocko = pvna_neighbors%blocko + bcnax*P_eq2
-              !write (43,*) bcnam, 'bcnam'
               deallocate (bcnam, bcnax)
             end if ! end if for r1 .eq. r2 case
           end do ! end loop over neighbors
@@ -577,10 +575,15 @@
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
 
+          ! cut some more lengthy notation
+          pvna_neighbors=>pvna%neighbors(matom)
+
+! Allocate block size
+          allocate (pvna_neighbors%block(norb_mu, norb_mu))
+          pvna_neighbors%block = 0.0d0
+
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pvna_neighbors=>pvna%neighbors(matom)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
@@ -617,6 +620,7 @@
             call getMEs_Fdata_2c (in1, in2, interaction, isorp, z,           &
      &                            norb_mu, norb_nu, bcnam)
             call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
+
             pvna_neighbors%block = pvna_neighbors%block + bcnax*P_eq2
             deallocate (bcnam, bcnax)
           end do ! end loop over neighbors

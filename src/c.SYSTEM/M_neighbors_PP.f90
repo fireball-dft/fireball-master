@@ -121,10 +121,7 @@
         if (ifix_neighbors .eq. 1) then
           call read_neighbors_PP (s)
         else
-!          write (logfile,*) ' Welcome to neighbors_PP - determine neighbor_PP mapping. '
           call find_neighbors_PP (s)
-
-!          write (logfile,*) ' Welcome to neighbors_PPx - determine neighbor_PPx mapping.'
           call find_neighbors_PPx (s)
         end if
 
@@ -465,7 +462,7 @@
             do jatom = 1, s%natoms
               in2 = s%atom(jatom)%imass
               r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
-              rcutoff_j = species(in2)%rcutoff_PP ! use PP cutoffs here!
+              rcutoff_j = species(in2)%rcutoff_PP ! use PP cutoffs here
 
 ! Find the distance from (mbeta,jatom) to (0,iatom)
               z = distance (r1, r2)
@@ -482,9 +479,9 @@
 
 ! Set up neigh_self.  The variable neigh_self(s%natoms) is the ineigh value for
 ! the "self interaction".  Find the neighbor-number of iatom with itself
-! (neigh_self) in order to put the result of VNA_atom (doscentros) into
-! VNA(mu,nu,neigh_self,iatom).
-! Initialize to something ridiculous.
+! (neigh_self) in order to put the result of vnl_atom (doscentros) into
+! vnl(mu,nu,neigh_self,iatom).
+        ! Initialize to something ridiculous.
         s%neighbors_PP_self = -999
         do iatom = 1, s%natoms
           do ineigh = 1, s%neighbors_PP(iatom)%neighn
@@ -725,6 +722,7 @@
             do jatom = 1, s%natoms
               in2 = s%atom(jatom)%imass
               r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
+
               rcutoff_j = -99.0d0
               do issh = 1, species(in2)%nssh
                 rcutoff_j = max(rcutoff_j,species(in2)%shell(issh)%rcutoffA)
@@ -1039,7 +1037,7 @@
               kbeta = s%neighbors_PPp(iatom)%neigh_b(kneigh)
 
 ! Test on iatom == katom
-              if(katom .eq. jatom .and. kbeta .eq. jbeta) then
+              if (katom .eq. jatom .and. kbeta .eq. jbeta) then
                 s%neighbors_PP(iatom)%map(ineigh) = kneigh
                 exit
               end if ! if (katom)

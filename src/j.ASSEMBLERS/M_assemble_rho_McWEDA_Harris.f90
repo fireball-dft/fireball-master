@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2008
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -309,7 +309,7 @@
               do isubtype = 1, species(in2)%nssh
                 Qneutral = species(in2)%shell(isubtype)%Qneutral
                 call getMEs_Fdata_2c (in1, in2, interaction, isubtype, z,    &
-     &                            norb_mu, norb_nu, bcxcm)
+     &                                norb_mu, norb_nu, bcxcm)
                 call rotate (in1, in3, eps, norb_mu, norb_nu, bcxcm, bcxcx)
                 prho_in_neighbors%block =                                    &
      &            prho_in_neighbors%block + bcxcx*Qneutral

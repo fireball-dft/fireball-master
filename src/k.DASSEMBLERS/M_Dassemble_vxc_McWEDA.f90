@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2008
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -128,7 +128,6 @@
 
 ! calculate  derivatires for average_rho matrix elements
 ! See Review OSLXC method
-
         call Dassemble_rho_2c (s)
         call Dassemble_rho_weighted_2c (s)
         call Dassemble_rho_3c (s)
@@ -255,13 +254,7 @@
         real d2muxc_in, d2muxc_bond      !< 2nd derivative of xc potential
         real delta
 
-!        real z                            !< distance between r1 and r2
-!        real, dimension (3) :: eta        !< vector part of epsilon eps(:,3)
-!        real, dimension (3, 3) :: eps     !< the epsilon matrix
-!        real, dimension (3, 3, 3) :: deps !< derivative of epsilon matrix
         real, dimension (3) :: r1, r2      !< positions of iatom and jatom ialpha
-!        real, dimension (3) :: r3, r12     !< positions of iatom and jatom ialpha
-!        real, dimension (3) :: sighat     !< unit vector along r2 - r1 !**
 
         ! vector derivatives of rho pieces
         real, dimension (3) :: Dprho_in_weighted
@@ -316,6 +309,7 @@
             allocate (pvxc_SN_bond_neighbors%Dblock(3,norb_mu, norb_nu))
             pvxc_SN_neighbors%Dblock= 0.0d0
             pvxc_SN_bond_neighbors%Dblock= 0.0d0
+
 ! If r1 .eq. r2, then this is a case of a seslf-interaction or "on-site" term;
 ! therefore, we do not calculate here.
             if (iatom .eq. jatom .and. mbeta .eq. 0) then
@@ -590,7 +584,6 @@
         integer mbeta                    !< the cell containing iatom's neighbor
 
         integer imu, inu
-!        integer issh, jssh
         integer norb_mu, norb_nu         !< size of the block for the pair
 
         real z                           !< distance between r1 and r2
@@ -668,6 +661,7 @@
 ! the sites of a wavefunction (ontop case).
             if (iatom .eq. jatom .and. mbeta .eq. 0) then
 
+! Do nothing here - this is the on-site case
 
             else
 
@@ -685,8 +679,7 @@
               isubtype = 0
               call getDMEs_Fdata_2c (in1, in3, interaction, isubtype, z,     &
      &                               norb_mu, norb_nu, bcxcm, dbcxcm)
-              !call rotate (in1, in3, eps, norb_mu, norb_nu, bcxcm, dcxcm)
-              ! Apply epsilon, the direction of the bondcharge.
+
 ! ****************************************************************************
 !
 ! FORCES
@@ -746,9 +739,7 @@
 !! center part, and also the d (< mu_i| V_xc (rho) | nu_i>)/dR called
 !! "on-site" in the notes.
 !!
-!!               rho_in (input density) --> (vxc_SN)
-!!       and
-!!               rho_bond (local or "atomic" (_at) density) --> vxc_SN_bond
+!!       rho_in (input density) --> (vxc_SN)
 !!
 !! Definition of rho_in and rho_local:
 !!       rho_bond (mu,nu) = < mu | rho_i | nu >
@@ -784,54 +775,31 @@
         integer in1, in2, in3              !< species numbers
         integer jatom, ialpha              !< jatom is the neighbor of iatom ialpha is the third atom for 3c
         integer logfile                    !< writing to which unit
-!        integer num_neigh                  !< number of neighbors
-!        integer matom                      !< matom is the self-interaction atom
-!        integer mbeta                      !< the cell containing neighbor of iatom
         integer ibeta                      !< matom is the self-interaction atom
         integer jbeta                      !< the cell containing neighbor of iatom
         integer isubtype                   !< which interaction and subtype
-!        integer interaction                !< which interaction and subtype
         integer imu, inu                   !< counter over orbitals
         integer issh, jssh                 !< counter over shells
-!        integer n1, n2, l1, l2, m1, m2     !< quantum numbers n, l, and m
         integer norb_mu, norb_nu           !< size of the block for the pair
         integer iindex
 
         ! inputs for xc functional
         real prho_in_shell                 !< temporary storage
-!        real prho_bond_shell               !< temporary storage
-!        real poverlap                      !< temporary stroage
         real prho_in                       !< temporary storage
-!        real prho_bond                     !< temporary storage
-        real dexc_in  !, dexc_bond            !< 1st derivative of xc energy
-        real d2exc_in !, d2exc_bond          !< 2nd derivative of xc energy
-        real dmuxc_in !, dmuxc_bond          !< 1st derivative of xc potential
-        real exc_in   !, exc_bond              !< xc energy
-        real muxc_in  !, muxc_bond            !< xc potential_
-        real d2muxc_in!, d2muxc_bond        !< 2nd derivative of xc potential
-!        real delta
+        real dexc_in                       !< 1st derivative of xc energy
+        real d2exc_in                      !< 2nd derivative of xc energy
+        real dmuxc_in                      !< 1st derivative of xc potential
+        real exc_in                        !< xc energy
+        real muxc_in                       !< xc potential_
+        real d2muxc_in                     !< 2nd derivative of xc potential
 
-!        real z                            !< distance between r1 and r2
-!        real, dimension (3) :: eta        !< vector part of epsilon eps(:,3)
-!        real, dimension (3, 3) :: eps     !< the epsilon matrix
-!        real, dimension (3, 3, 3) :: deps !< derivative of epsilon matrix
         real, dimension (3) :: r1, r2, r3!, r12     !< positions of iatom and jatom ialpha
-!        real, dimension (3) :: sighat     !< unit vector along r2 - r1
-
-        ! vector derivatives
-!        real, dimension (3) :: Dprho_in_weighted
-!        real, dimension (3) :: Dprho_in
-!        real, dimension (3) :: Dprho_bond_weighted
-!        real, dimension (3) :: Dprho_bond
-!        real, dimension (3) :: Dpoverlap
 
         type(T_Fdata_cell_3c), pointer :: pFdata_cell
         type(T_Fdata_bundle_3c), pointer :: pFdata_bundle
 
         type(T_assemble_block), pointer :: pvxc_SN_neighbors
         type(T_assemble_neighbors), pointer :: pvxc_SN
-!        type(T_assemble_block), pointer :: pvxc_SN_bond_neighbors
-!        type(T_assemble_neighbors), pointer :: pvxc_SN_bond
 
 ! Allocate Arrays
 ! ===========================================================================
@@ -853,7 +821,6 @@
         do ialpha = 1, s%natoms
           in3 = s%atom(ialpha)%imass
           r3 = s%atom(ialpha)%ratom
-          ! cut some lengthy notation
 
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, s%neighbors(ialpha)%ncommon  ! <==== loop over i's neighbors
@@ -865,8 +832,6 @@
               in1 = s%atom(iatom)%imass
               norb_mu = species(in1)%norb_max
 
-              pvxc_SN=>s%vxc(iatom)
-              pvxc_SN_neighbors=>pvxc_SN%neighbors(mneigh)
 
               jatom = s%neighbors(ialpha)%jatom_common_j(ineigh)
               jbeta = s%neighbors(ialpha)%jatom_common_b(ineigh)
@@ -874,13 +839,16 @@
               in2 = s%atom(jatom)%imass
               norb_nu = species(in2)%norb_max
 
+              ! cut some lengthy notation
+              pvxc_SN=>s%vxc(iatom); pvxc_SN_neighbors=>pvxc_SN%neighbors(mneigh)
+
               ! cut some more lengthy notation
-              allocate (pvxc_SN%neighbors(mneigh)%aDblock(3,norb_mu, norb_nu))
-              allocate (pvxc_SN%neighbors(mneigh)%bDblock(3,norb_mu, norb_nu))
-              allocate (pvxc_SN%neighbors(mneigh)%cDblock(3,norb_mu, norb_nu))
-              pvxc_SN%neighbors(mneigh)%aDblock= 0.0d0
-              pvxc_SN%neighbors(mneigh)%bDblock= 0.0d0
-              pvxc_SN%neighbors(mneigh)%cDblock= 0.0d0
+              allocate (pvxc_SN_neighbors%Dblocka(3, norb_mu, norb_nu))
+              allocate (pvxc_SN_neighbors%Dblockb(3, norb_mu, norb_nu))
+              allocate (pvxc_SN_neighbors%Dblockc(3, norb_mu, norb_nu))
+              pvxc_SN_neighbors%Dblocka = 0.0d0
+              pvxc_SN_neighbors%Dblockb = 0.0d0
+              pvxc_SN_neighbors%Dblockc = 0.0d0
 
               do issh = 1, species(in1)%nssh
                 do jssh = 1, species(in2)%nssh
@@ -901,24 +869,24 @@
 
                    prho_in = s%rho_in(iatom)%neighbors(mneigh)%block(imu,inu)
 
-                   pvxc_SN%neighbors(mneigh)%aDblock(:,imu,inu) =            &
-     &               d2muxc_in*prho_in*s%rho_in_weighted(iatom)%neighbors(mneigh)%aDblock(:,issh,jssh) &
-     &               + dmuxc_in*s%rho_in(iatom)%neighbors(mneigh)%aDblock(:,imu,inu)
+                   pvxc_SN_neighbors%Dblocka(:,imu,inu) =                    &
+     &               d2muxc_in*prho_in*s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblocka(:,issh,jssh) &
+     &               + dmuxc_in*s%rho_in(iatom)%neighbors(mneigh)%Dblocka(:,imu,inu)
 
-                   pvxc_SN%neighbors(mneigh)%bDblock(:,imu,inu) =            &
-     &               d2muxc_in*prho_in*s%rho_in_weighted(iatom)%neighbors(mneigh)%bDblock(:,issh,jssh) &
-     &               + dmuxc_in*s%rho_in(iatom)%neighbors(mneigh)%bDblock(:,imu,inu)
+                   pvxc_SN_neighbors%Dblockb(:,imu,inu) =                    &
+     &               d2muxc_in*prho_in*s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblockb(:,issh,jssh) &
+     &               + dmuxc_in*s%rho_in(iatom)%neighbors(mneigh)%Dblockb(:,imu,inu)
 
-                   pvxc_SN%neighbors(mneigh)%cDblock(:,imu,inu)=             &
-     &               d2muxc_in*prho_in*s%rho_in_weighted(iatom)%neighbors(mneigh)%cDblock(:,issh,jssh) &
-     &               + dmuxc_in*s%rho_in(iatom)%neighbors(mneigh)%cDblock(:,imu,inu)
+                   pvxc_SN_neighbors%Dblockc(:,imu,inu)=                     &
+     &               d2muxc_in*prho_in*s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblockc(:,issh,jssh) &
+     &               + dmuxc_in*s%rho_in(iatom)%neighbors(mneigh)%Dblockc(:,imu,inu)
                   end do ! iindex = 1, pFdata_cell%nME
                  end do ! isubtype = 1, species(in3)%nssh
-                end do !** jssh = 1, species(in2)%nssh
-              end do !** issh = 1, species(in1)%nssh
+                end do ! end loop jssh = 1, species(in2)%nssh
+              end do ! end loop issh = 1, species(in1)%nssh
             end if ! if (mneigh .ne. 0)
-          end do !** over the neighbors
-        end do !** over the atoms
+          end do ! end loop over the neighbors
+        end do ! end loop over the atoms
 
 ! Deallocate Arrays
 ! ===========================================================================

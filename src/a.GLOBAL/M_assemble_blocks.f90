@@ -45,10 +45,9 @@
           real, pointer :: Dblock (:, :, :)  ! atom piece/three-center piece
           real, pointer :: Dblocko (:, :, :) ! ontop piece
 
-          ! Not certain what's happening above, but for 3c:
-          real, pointer :: aDblock (:, :, :)
-          real, pointer :: bDblock (:, :, :)
-          real, pointer :: cDblock (:, :, :)
+          real, pointer :: Dblocka (:, :, :)
+          real, pointer :: Dblockb (:, :, :)
+          real, pointer :: Dblockc (:, :, :)
 
           ! We use this in case we are needing actual energies rather than
           ! matrix elements such as in the Coulomb double-counting correction

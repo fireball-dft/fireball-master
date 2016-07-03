@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2008
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -201,14 +201,14 @@
               end do ! do inu
 
 ! Add this piece for iatom, jatom, and katom into the total (bcnlx ===> vnl)
-              pvnl_neighbors%block = pvnl_neighbors%block + bcnlx
+!             pvnl_neighbors%block = pvnl_neighbors%block + bcnlx
 
 ! Deallocate Arrays
               deallocate (bcnlx)
             end if
-          end do ! do ineigh
+          end do ! end loop over neighbors
           deallocate (cl_value)
-        end do ! do ialp
+        end do ! end loop over ialpha
 
 ! Format Statements
 ! ===========================================================================

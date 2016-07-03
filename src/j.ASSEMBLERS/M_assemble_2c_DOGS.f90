@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2009
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -648,17 +648,19 @@
 
 ! Neutral atom case
               isorp = 0
-              call getMEs_Fdata_2c (in1, in3, interaction, isorp, z, norb_mu,&
+              call getMEs_Fdata_2c (in1, in2, interaction, isorp, z, norb_mu,&
      &                              norb_nu, bcnam)
               call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
               pvna_neighbors%blocko = pvna_neighbors%blocko + bcnax*P_eq2
 
 ! Charged atom cases
               do isorp = 1, species(in1)%nssh
-                call getMEs_Fdata_2c (in1, in3, interaction, isorp, z,       &
+                dQ = s%atom(iatom)%shell(isorp)%dQ
+
+                call getMEs_Fdata_2c (in1, in2, interaction, isorp, z,       &
      &                                norb_mu, norb_nu, bcnam)
                 call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
-                dQ = s%atom(iatom)%shell(isorp)%dQ
+
                 pvna_neighbors%blocko = pvna_neighbors%blocko + dQ*bcnax*P_eq2
               end do ! isorp
 
@@ -675,10 +677,11 @@
 
 ! Charged atom case
               do isorp = 1, species(in2)%nssh
+                dQ = s%atom(jatom)%shell(isorp)%dQ
+
                 call getMEs_Fdata_2c (in1, in2, interaction, isorp, z,       &
      &                                norb_mu, norb_nu, bcnam)
                 call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
-                dQ = s%atom(jatom)%shell(isorp)%dQ
 
                 ! Note that we are smoothing here
                 pvna_neighbors%blocko = pvna_neighbors%blocko + dQ*bcnax*P_eq2
@@ -792,10 +795,12 @@
 
 ! Charged atom cases
             do isorp = 1, species(in2)%nssh
+              dQ = s%atom(jatom)%shell(isorp)%dQ
+
               call getMEs_Fdata_2c (in1, in2, interaction, isorp, z, norb_mu,&
      &                              norb_nu, bcnam)
               call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
-              dQ = s%atom(jatom)%shell(isorp)%dQ
+
               pvna_neighbors%block = pvna_neighbors%block                    &
       &        + (smooth*bcnax + (1.0d0 - smooth)*emnpl)*dQ*P_eq2
             end do ! isorp
