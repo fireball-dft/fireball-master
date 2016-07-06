@@ -111,7 +111,7 @@ FUNCTIONS_CREATE = initialize_noMPI.o finalize_noMPI.o
 FUNCTIONS_LIGHTNING = make_cells.o cl.o epsilon.o
 
 MD = M_gear_quench.o
-NAMD = M_non_adiabatic_gamma.o M_Goverlap.o
+NAMD = M_non_adiabatic_gamma.o M_non_adiabatic_coupling.o M_density_MDET.o
 OUTPUT = writeout_energies.o writeout_xyz.o writeout_xsf.o
 UTIL = absorption_gamma.o dos_gamma.o M_isosurfaces.o 
 SOLVESH = M_diagonalization_Lowdin_gamma.o M_kspace_Lowdin.o M_density_matrix.o
@@ -180,7 +180,7 @@ OBJECTS_BEGIN =     $(CONFIG) $(FUNCTIONS) $(SYSTEM_BEGIN)     $(FUNCTIONS_BEGIN
 OBJECTS_CREATE =    $(CONFIG) $(FUNCTIONS) $(SYSTEM_CREATE)    $(FUNCTIONS_CREATE) $(XC_FUNCTIONALS) $(CREATE)
 OBJECTS_LIGHTNING = $(CONFIG) $(FUNCTIONS) $(SYSTEM_LIGHTNING) $(FUNCTIONS_LIGHTNING) $(FDATA) lda_ceperley_alder.o $(SOLVESH) $(ASSEMBLERS) $(SCF) $(OUTPUT) $(UTIL)
 OBJECTS_FIREBALL =  $(CONFIG) $(FUNCTIONS) $(SYSTEM)  $(FUNCTIONS_LIGHTNING) $(DFDATA) lda_ceperley_alder.o $(SOLVESH) $(ASSEMBLERS) $(DASSEMBLERS) $(SCF) $(MD) $(OUTPUT) $(UTIL)
-OBJECTS_MDET =      $(CONFIG) $(FUNCTIONS) $(SYSTEM)  $(FUNCTIONS_LIGHTNING) $(DFDATA) $(SOLVESH) $(ASSEMBLERS) $(DASSEMBLERS) $(SCF) $(MD) $(NAMD) $(OUTPUT)
+OBJECTS_MDET =      $(CONFIG) $(FUNCTIONS) $(SYSTEM)  $(FUNCTIONS_LIGHTNING) $(DFDATA) lda_ceperley_alder.o $(SOLVESH) $(ASSEMBLERS) $(DASSEMBLERS) $(SCF) $(MD) $(NAMD) $(OUTPUT)
 OBJECTS_LIGHTNING_GRID = $(CONFIG) $(FUNCTIONS) $(SYSTEM_LIGHTNING) $(FUNCTIONS_LIGHTNING) $(FDATA) lda_ceperley_alder.o $(SOLVESH_GRID) $(GRID) $(ASSEMBLERS) $(SCF) $(OUTPUT) $(UTIL)
 
 ######################################################################
@@ -682,6 +682,10 @@ M_gear_quench.o : m.MD/M_gear_quench.f90
 # n.NAMD
 # *****************************************************************************
 M_non_adiabatic_gamma.o : n.NAMD/M_non_adiabatic_gamma.f90
+	$(F90) $(FFLAGS) -c $^
+M_non_adiabatic_coupling.o : n.NAMD/M_non_adiabatic_coupling.f90
+	$(F90) $(FFLAGS) -c $^
+M_density_MDET.o : n.NAMD/M_density_MDET.f90
 	$(F90) $(FFLAGS) -c $^
 
 # *****************************************************************************
