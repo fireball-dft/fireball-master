@@ -239,7 +239,7 @@
 
 ! allocate force terms and initialize to zero
           allocate (pfi%vna_atom (3, num_neigh)); pfi%vna_atom = 0.0d0
-          allocate (pfi%vna_ontop (3, num_neigh)); pfi%vna_ontop = 0.0d0
+!         allocate (pfi%vna_ontop (3, num_neigh)); pfi%vna_ontop = 0.0d0
           allocate (pfi%vxc_off_site (3, num_neigh)); pfi%vxc_off_site = 0.0d0
           allocate (pfi%vxc_on_site (3, num_neigh)); pfi%vxc_on_site = 0.0d0
           allocate (pfi%ewaldsr (3, num_neigh)); pfi%ewaldsr = 0.0d0
@@ -319,38 +319,38 @@
 ! ASSEMBLE HARTREE (TWO-CENTER) FORCES - ONTOP CASE
 ! ***************************************************************************
 ! Now loop over all neighbors ineigh of iatom.
-          do ineigh = 1, num_neigh
-            mbeta = s%neighbors(iatom)%neigh_b(ineigh)
-            jatom = s%neighbors(iatom)%neigh_j(ineigh)
-            in2 = s%atom(jatom)%imass
-            norb_nu = species(in2)%norb_max
+!         do ineigh = 1, num_neigh
+!           mbeta = s%neighbors(iatom)%neigh_b(ineigh)
+!           jatom = s%neighbors(iatom)%neigh_j(ineigh)
+!           in2 = s%atom(jatom)%imass
+!           norb_nu = species(in2)%norb_max
 
             ! cut some lengthy notation
-            pfj=>s%forces(jatom)
+!           pfj=>s%forces(jatom)
 
             ! density matrix - neighbors
-            pRho_neighbors=>pdenmat%neighbors(ineigh)
+!           pRho_neighbors=>pdenmat%neighbors(ineigh)
 
             ! cut some lengthy notation for vna
-            pvna_neighbors=>pvna%neighbors(ineigh)
+!           pvna_neighbors=>pvna%neighbors(ineigh)
 
 ! If r1 .ne. r2, then this is a case where the potential is located at one of
 ! the sites of a wavefunction (ontop case).
-            if (iatom .eq. jatom .and. mbeta .eq. 0) then
+!           if (iatom .eq. jatom .and. mbeta .eq. 0) then
 
 ! Do nothing here - special case. Interaction already calculated in atm case.
 
-            else
+!           else
 
 ! Notice the explicit negative sign, this makes it force like.
-              do inu = 1, norb_nu
-                do imu = 1, norb_mu
-                  pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)          &
-     &             - pRho_neighbors%block(imu,inu)*pvna_neighbors%Dblocko(:,imu,inu)
-                end do
-              end do
-            end if
-          end do ! end loop over neighbors
+!             do inu = 1, norb_nu
+!               do imu = 1, norb_mu
+!                 pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)          &
+!     &            - pRho_neighbors%block(imu,inu)*pvna_neighbors%Dblocko(:,imu,inu)
+!               end do
+!             end do
+!           end if
+!         end do ! end loop over neighbors
 
 
 ! ASSEMBLE EXCHANGE-CORRELATION (TWO-CENTER) FORCE - ON-SITE CASE
@@ -586,57 +586,6 @@
 !       T W O - C E N T E R   B A N D - S T R U C T U R E   F O R C E S
 ! ***************************************************************************
 
-! ***************************************************************************
-!
-!     T H R E E - C E N T E R   B A N D - S T R U C T U R E   F O R C E S
-! ***************************************************************************
-! The terms f3naXa, f3naXb, and f3naXc are already force-like.
-        do ialpha = 1, s%natoms
-          in3 = s%atom(ialpha)%imass
-          r3 = s%atom(ialpha)%ratom
-
-          ! cut some lengthy notation
-          pfalpha=>s%forces(ialpha)
-
-          ! loop over the common neigbor pairs of ialp
-          do ineigh = 1, s%neighbors(ialpha)%ncommon
-            mneigh = s%neighbors(ialpha)%neigh_common(ineigh)
-            if (mneigh .ne. 0) then
-              iatom = s%neighbors(ialpha)%iatom_common_j(ineigh)
-              ibeta = s%neighbors(ialpha)%iatom_common_b(ineigh)
-              r1 = s%atom(iatom)%ratom + s%xl(ibeta)%a
-              in1 = s%atom(iatom)%imass
-              norb_mu = species(in1)%norb_max
-
-              jatom = s%neighbors(ialpha)%jatom_common_j(ineigh)
-              jbeta = s%neighbors(ialpha)%jatom_common_b(ineigh)
-              r2 = s%atom(jatom)%ratom + s%xl(jbeta)%a
-              in2 = s%atom(jatom)%imass
-              norb_nu = species(in2)%norb_max
-
-              ! cut lengthy notation
-              pfi=>s%forces(iatom); pfj=>s%forces(jatom)
-
-              ! density matrix
-              pdenmat=>s%denmat(iatom); pRho_neighbors=>pdenmat%neighbors(mneigh)
-
-              ! vna and interactions
-              pvxc=>s%vxc(iatom); pvxc_neighbors=>pvxc%neighbors(mneigh)
-
-              do inu = 1, norb_nu
-                do imu = 1, norb_mu
-                  pfalpha%f3xca = pfalpha%f3xca                              &
-     &              + pRho_neighbors%block(imu,inu)*pvxc_neighbors%Dblocka(:,imu,inu)
-                  pfi%f3xcb = pfi%f3xcb                                      &
-     &              + pRho_neighbors%block(imu,inu)*pvxc_neighbors%Dblockb(:,imu,inu)
-                  pfj%f3xcc = pfj%f3xcc                                      &
-     &              + pRho_neighbors%block(imu,inu)*pvxc_neighbors%Dblockc(:,imu,inu)
-                end do
-              end do
-            end if
-          end do ! end loop over neighbors
-        end do  ! end loop over atoms
-
 ! ADD CONTRIBUTIONS TO GET TOTAL BAND-STRUCTURE FORCE (THREE-CENTER)
 ! ***************************************************************************
 ! Loop over all atoms iatom in the central cell.
@@ -651,7 +600,7 @@
 
 ! vxc three-center contribution to the total force
 ! ****************************************************************************
-!         pfi%ftot = pfi%ftot + pfi%f3xca + pfi%f3xcb + pfi%f3xcc
+          pfi%ftot = pfi%ftot + pfi%f3xca + pfi%f3xcb + pfi%f3xcc
         end do ! end loop over atoms
 ! ***************************************************************************
 !                                   E N D
@@ -807,7 +756,8 @@
         write (logfile,101)
         write (logfile,100)
         do iatom = 1, s%natoms
-          write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%kinetic
+          write (logfile,102) 'f_kinetic', iatom, s%atom(iatom)%species%symbol,&
+     &                                            s%forces(iatom)%kinetic
         end do
         write (logfile,100)
 
@@ -817,7 +767,8 @@
         write (logfile,101)
         write (logfile,100)
         do iatom = 1, s%natoms
-          write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%vna
+          write (logfile,102) 'f_vna_2c', iatom, s%atom(iatom)%species%symbol,&
+     &                                           s%forces(iatom)%vna
         end do
         write (logfile,100)
 
@@ -829,8 +780,8 @@
         do iatom = 1, s%natoms
           ! cut some lengthy notation
           pfi=>s%forces(iatom)
-          write (logfile,102) iatom, s%atom(iatom)%species%symbol,           &
-     &                        pfi%f3naa + pfi%f3nab + pfi%f3nac
+          write (logfile,102) 'f_vna_3c', iatom, s%atom(iatom)%species%symbol,&
+     &                                           pfi%f3naa + pfi%f3nab + pfi%f3nac
         end do
         write (logfile,100)
 
@@ -840,7 +791,8 @@
         write (logfile,101)
         write (logfile,100)
         do iatom = 1, s%natoms
-          write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%vnl
+          write (logfile,102) 'f_vnl', iatom, s%atom(iatom)%species%symbol,&
+     &                                        s%forces(iatom)%vnl
         end do
         write (logfile,100)
 
@@ -851,7 +803,8 @@
         write (logfile,101)
         write (logfile,100)
         do iatom = 1, s%natoms
-          write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%vxc
+          write (logfile,102) 'f_vxc_2c', iatom, s%atom(iatom)%species%symbol,&
+     &                                           s%forces(iatom)%vxc
         end do
         write (logfile,100)
 
@@ -864,8 +817,8 @@
         do iatom = 1, s%natoms
           ! cut some lengthy notation
           pfi=>s%forces(iatom)
-          write (logfile,102) iatom, s%atom(iatom)%species%symbol,           &
-     &                        pfi%f3xca + pfi%f3xcb + pfi%f3xcc
+          write (logfile,102) 'f_vxc_3c', iatom, s%atom(iatom)%species%symbol,&
+     &                                           pfi%f3xca + pfi%f3xcb + pfi%f3xcc
         end do
         write (logfile,100)
 
@@ -876,7 +829,8 @@
         write (logfile,101)
         write (logfile,100)
         do iatom = 1, s%natoms
-          write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%ewald
+          write (logfile,102) 'f_ewald', iatom, s%atom(iatom)%species%symbol,&
+     &                                          s%forces(iatom)%ewald
         end do
         write (logfile,100)
 
@@ -886,7 +840,7 @@
         write (logfile,101)
         write (logfile,100)
         do iatom = 1, s%natoms
-          write (logfile,102) iatom, s%atom(iatom)%species%symbol,           &
+          write (logfile,102) 'f_ebs', iatom, s%atom(iatom)%species%symbol,  &
      &                        s%forces(iatom)%kinetic + s%forces(iatom)%vna  &
      &                        + s%forces(iatom)%vnl + s%forces(iatom)%vxc    &
      &                        + s%forces(iatom)%ewald
@@ -899,7 +853,8 @@
         write (logfile,101)
         write (logfile,100)
         do iatom = 1, s%natoms
-          write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%usr
+          write (logfile,102) 'f_usr', iatom, s%atom(iatom)%species%symbol, &
+     &                                        s%forces(iatom)%usr
         end do
 
         write (logfile,*)
@@ -908,7 +863,8 @@
         write (logfile,101)
         write (logfile,100)
         do iatom = 1, s%natoms
-          write (logfile,102) iatom, s%atom(iatom)%species%symbol, s%forces(iatom)%pulay
+          write (logfile,102) 'f_pulay', iatom, s%atom(iatom)%species%symbol,&
+     &                                          s%forces(iatom)%pulay
         end do
         write (logfile,100)
         
@@ -919,9 +875,9 @@
 ! Format Statements
 ! ===========================================================================
 100     format (4x, 70('='))
-101     format (4x, 'Atom # ', 2x, ' Type ', 5x,   &
+101     format (4x, 'Force ', 'Atom # ', 2x, ' Type ', 5x,   &
      &              ' x ', 9x, ' y ', 9x, ' z ')
-102     format (4x,  i5, 7x, a2, 3(2x,ES10.3))
+102     format (4x, A,  i5, 7x, a2, 3(2x,ES10.3))
 103     format (4x, A)
 
 

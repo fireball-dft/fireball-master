@@ -64,8 +64,7 @@
         use M_configuraciones
         use M_assemble_vxc
         use M_Dassemble_rho_McWEDA
-        use M_Dassemble_2c !**
-
+        use M_Dassemble_2c
 
 ! Type Declaration
 ! ===========================================================================
@@ -130,8 +129,6 @@
 ! See Review OSLXC method
         call Dassemble_rho_2c (s)
         call Dassemble_rho_weighted_2c (s)
-        call Dassemble_rho_3c (s)
-        call Dassemble_rho_weighted_3c (s)
 
 ! calculate derivatives of XC-potential matrix elements
         write (logfile,*) ' Calling vxc assemblers. '
@@ -728,178 +725,6 @@
 ! ===========================================================================
         return
         end subroutine Dassemble_vxc_bond
-
-
-! ===========================================================================
-! Dassemble_vxc_3c
-! ===========================================================================
-! Subroutine Description
-! ===========================================================================
-!> This routine calculates/assembles the SNXC 2 center part, the OLSXC 2
-!! center part, and also the d (< mu_i| V_xc (rho) | nu_i>)/dR called
-!! "on-site" in the notes.
-!!
-!!       rho_in (input density) --> (vxc_SN)
-!!
-!! Definition of rho_in and rho_local:
-!!       rho_bond (mu,nu) = < mu | rho_i | nu >
-!!         if mu and nu are in the same atom "i" : onsite case
-!!       rho_bond (mu,nu) = < mu | rho_i + rho_j | nu >
-!!         if mu and nu are in different atoms "i" and "j" : atom case
-!!       rho_in = sum of onsite rho_bond values
-!
-! ===========================================================================
-! Code written by:
-!> @author Daniel G. Trabada
-!! @author Jose Ortega (JOM)
-! Departamento de Fisica Teorica de la Materia Condensada
-! Universidad Autonoma de Madrid
-! ===========================================================================
-!
-! Program Declaration
-! ===========================================================================
-        subroutine Dassemble_vxc_3c (s)
-        implicit none
-
-! Argument Declaration and Description
-! ===========================================================================
-        type(T_structure), target :: s           !< the structure to be used.
-
-! Parameters and Data Declaration
-! ===========================================================================
-! None
-
-! Variable Declaration and Description
-! ===========================================================================
-        integer iatom, ineigh, mneigh      !< counter over atoms and neighbors
-        integer in1, in2, in3              !< species numbers
-        integer jatom, ialpha              !< jatom is the neighbor of iatom ialpha is the third atom for 3c
-        integer logfile                    !< writing to which unit
-        integer ibeta                      !< matom is the self-interaction atom
-        integer jbeta                      !< the cell containing neighbor of iatom
-        integer isubtype                   !< which interaction and subtype
-        integer imu, inu                   !< counter over orbitals
-        integer issh, jssh                 !< counter over shells
-        integer norb_mu, norb_nu           !< size of the block for the pair
-        integer iindex
-
-        ! inputs for xc functional
-        real prho_in_shell                 !< temporary storage
-        real prho_in                       !< temporary storage
-        real dexc_in                       !< 1st derivative of xc energy
-        real d2exc_in                      !< 2nd derivative of xc energy
-        real dmuxc_in                      !< 1st derivative of xc potential
-        real exc_in                        !< xc energy
-        real muxc_in                       !< xc potential_
-        real d2muxc_in                     !< 2nd derivative of xc potential
-
-        real, dimension (3) :: r1, r2, r3!, r12     !< positions of iatom and jatom ialpha
-
-        type(T_Fdata_cell_3c), pointer :: pFdata_cell
-        type(T_Fdata_bundle_3c), pointer :: pFdata_bundle
-
-        type(T_assemble_block), pointer :: pvxc_SN_neighbors
-        type(T_assemble_neighbors), pointer :: pvxc_SN
-
-! Allocate Arrays
-! ===========================================================================
-! None
-
-! Procedure
-! ===========================================================================
-! Initialize logfile
-        logfile = s%logfile
-
-! Procedure
-! ===========================================================================
-! ***************************************************************************
-!
-!                       O F F  -  S I T E    P I E C E(off diagonal terms)
-!
-! ***************************************************************************
-! Loop over the atoms in the central cell.
-        do ialpha = 1, s%natoms
-          in3 = s%atom(ialpha)%imass
-          r3 = s%atom(ialpha)%ratom
-
-! Loop over the neighbors of each iatom.
-          do ineigh = 1, s%neighbors(ialpha)%ncommon  ! <==== loop over i's neighbors
-            mneigh = s%neighbors(ialpha)%neigh_common(ineigh)
-            if (mneigh .ne. 0) then
-              iatom = s%neighbors(ialpha)%iatom_common_j(ineigh)
-              ibeta = s%neighbors(ialpha)%iatom_common_b(ineigh)
-              r1 = s%atom(iatom)%ratom + s%xl(ibeta)%a
-              in1 = s%atom(iatom)%imass
-              norb_mu = species(in1)%norb_max
-
-
-              jatom = s%neighbors(ialpha)%jatom_common_j(ineigh)
-              jbeta = s%neighbors(ialpha)%jatom_common_b(ineigh)
-              r2 = s%atom(jatom)%ratom + s%xl(jbeta)%a
-              in2 = s%atom(jatom)%imass
-              norb_nu = species(in2)%norb_max
-
-              ! cut some lengthy notation
-              pvxc_SN=>s%vxc(iatom); pvxc_SN_neighbors=>pvxc_SN%neighbors(mneigh)
-
-              ! cut some more lengthy notation
-              allocate (pvxc_SN_neighbors%Dblocka(3, norb_mu, norb_nu))
-              allocate (pvxc_SN_neighbors%Dblockb(3, norb_mu, norb_nu))
-              allocate (pvxc_SN_neighbors%Dblockc(3, norb_mu, norb_nu))
-              pvxc_SN_neighbors%Dblocka = 0.0d0
-              pvxc_SN_neighbors%Dblockb = 0.0d0
-              pvxc_SN_neighbors%Dblockc = 0.0d0
-
-              do issh = 1, species(in1)%nssh
-                do jssh = 1, species(in2)%nssh
-                 do isubtype = 1, species(in3)%nssh
-                  pFdata_bundle => Fdata_bundle_3c(in1, in2, in3)
-                  pFdata_cell =>                                             &
-     &              pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(P_rho_3c,isubtype,1))
-
-                  do iindex = 1, pFdata_cell%nME
-                    imu = pFdata_cell%mu_3c(iindex)
-                    inu = pFdata_cell%nu_3c(iindex)
-
-! Call lda-function with rho_in_weighted to get the coefficients for vxc expancion
-                   prho_in_shell =                                           &
-     &               s%rho_in_weighted(iatom)%neighbors(mneigh)%block(issh,jssh)
-                   call lda_ceperley_alder (prho_in_shell, exc_in, muxc_in,  &
-     &                                      dexc_in, d2exc_in, dmuxc_in, d2muxc_in)
-
-                   prho_in = s%rho_in(iatom)%neighbors(mneigh)%block(imu,inu)
-
-                   pvxc_SN_neighbors%Dblocka(:,imu,inu) =                    &
-     &               d2muxc_in*prho_in*s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblocka(:,issh,jssh) &
-     &               + dmuxc_in*s%rho_in(iatom)%neighbors(mneigh)%Dblocka(:,imu,inu)
-
-                   pvxc_SN_neighbors%Dblockb(:,imu,inu) =                    &
-     &               d2muxc_in*prho_in*s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblockb(:,issh,jssh) &
-     &               + dmuxc_in*s%rho_in(iatom)%neighbors(mneigh)%Dblockb(:,imu,inu)
-
-                   pvxc_SN_neighbors%Dblockc(:,imu,inu)=                     &
-     &               d2muxc_in*prho_in*s%rho_in_weighted(iatom)%neighbors(mneigh)%Dblockc(:,issh,jssh) &
-     &               + dmuxc_in*s%rho_in(iatom)%neighbors(mneigh)%Dblockc(:,imu,inu)
-                  end do ! iindex = 1, pFdata_cell%nME
-                 end do ! isubtype = 1, species(in3)%nssh
-                end do ! end loop jssh = 1, species(in2)%nssh
-              end do ! end loop issh = 1, species(in1)%nssh
-            end if ! if (mneigh .ne. 0)
-          end do ! end loop over the neighbors
-        end do ! end loop over the atoms
-
-! Deallocate Arrays
-! ===========================================================================
-! None
-
-! Format Statements
-! ===========================================================================
-! None
-
-! End Subroutine
-! ===========================================================================
-        return
-        end subroutine Dassemble_vxc_3c
 
 
 ! End Module

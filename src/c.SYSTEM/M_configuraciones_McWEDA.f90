@@ -109,6 +109,7 @@
           integer, pointer :: iatom_common_j (:) ! atom number of iatom
           integer, pointer :: jatom_common_b (:) ! cell of jatom
           integer, pointer :: jatom_common_j (:) ! atom number of iatom
+
           ! neighbor number of jatom to iatom
           integer, pointer :: neigh_common (:)
         end type T_neighbors_PP

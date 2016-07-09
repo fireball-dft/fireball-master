@@ -335,21 +335,23 @@
 ! ===========================================================================
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          pkinetic=>s%kinetic(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
+
+          ! cut some lengthy notation
+          pkinetic=>s%kinetic(iatom)
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pK_neighbors=>pkinetic%neighbors(ineigh)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
+
+            ! cut some more lengthy notation
+            pK_neighbors=>pkinetic%neighbors(ineigh)
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
@@ -579,9 +581,21 @@
         type(T_assemble_block), pointer :: pvna_neighbors
         type(T_assemble_neighbors), pointer :: pvna
 
+        ! density matrix stuff
+        type(T_assemble_neighbors), pointer :: pdenmat
+        type(T_assemble_block), pointer :: pRho_neighbors
+        type(T_assemble_block), pointer :: pRho_neighbors_matom
+
+        type(T_forces), pointer :: pfi
+
 ! Allocate Arrays
 ! ===========================================================================
-! None
+        do iatom = 1, s%natoms
+          pfi=>s%forces(iatom)
+          num_neigh = s%neighbors(iatom)%neighn
+!         allocate (pfi%vna_atom (3, num_neigh)); pfi%vna_atom = 0.0d0
+          allocate (pfi%vna_ontop (3, num_neigh)); pfi%vna_ontop = 0.0d0
+        end do
 
 ! Procedure
 ! ===========================================================================
@@ -593,12 +607,14 @@
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
 
           ! cut some lengthy notation
           pvna=>s%vna(iatom)
+          pdenmat=>s%denmat(iatom)
+          pfi=>s%forces(iatom)
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
@@ -607,13 +623,12 @@
 
             ! cut some more lengthy notation
             pvna_neighbors=>pvna%neighbors(ineigh)
+            pRho_neighbors=>pdenmat%neighbors(ineigh)
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
             allocate (pvna_neighbors%Dblock (3, norb_mu, norb_mu))
-            allocate (pvna_neighbors%Dblocko (3, norb_mu, norb_nu))
             pvna_neighbors%Dblock = 0.0d0
-            pvna_neighbors%Dblocko = 0.0d0
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -685,7 +700,14 @@
 
               call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,    &
      &                      vdbcnam, vdbcnax)
-              pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + vdbcnax*P_eq2
+
+! Notice the explicit negative sign, this makes it force like.
+              do inu = 1, norb_nu
+                do imu = 1, norb_mu
+                  pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)          &
+     &             - pRho_neighbors%block(imu,inu)*vdbcnax(:,imu,inu)*P_eq2
+                end do
+              end do
 
 ! FORCES - ONTOP RIGHT CASE
 ! ****************************************************************************
@@ -722,7 +744,13 @@
 
               call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,    &
      &                      vdbcnam, vdbcnax)
-              pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + vdbcnax*P_eq2
+
+              do inu = 1, norb_nu
+                do imu = 1, norb_mu
+                  pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)          &
+     &             - pRho_neighbors%block(imu,inu)*vdbcnax(:,imu,inu)*P_eq2
+                end do
+              end do
 
 ! Form the Left ontop force. Use the derivatives, since the derivative is
 ! with respect to d/d(ratom) when the atom is ontop atom 1.

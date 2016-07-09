@@ -175,7 +175,7 @@ ASSEMBLERS = M_assemble_2c_Harris.o M_assemble_3c_Harris.o M_assemble_ewald_Harr
 DFDATA = M_Fdata_1c_McWEDA_Harris.o M_DFdata_2c.o M_DFdata_3c.o
 FDATA = M_Fdata_1c_McWEDA_Harris.o M_Fdata_2c.o M_Fdata_3c.o
 SCF = M_charges_Lowdin.o Qmixer_Anderson_Harris.o
-DASSEMBLERS = M_Drotations.o M_Drotations_PP.o M_Dassemble_rho_McWEDA_Harris.o M_Dassemble_2c_Harris.o M_Dassemble_PP_2c.o M_Dassemble_ewald_Harris.o M_Dassemble_usr_McWEDA_Harris.o M_build_forces.o M_Dassemble_3c_Harris.o M_Dassemble_vxc_McWEDA.o
+DASSEMBLERS = M_Drotations.o M_Drotations_PP.o M_Dassemble_rho_McWEDA_Harris.o M_Dassemble_2c_Harris.o M_Dassemble_PP_2c.o M_Dassemble_ewald_Harris.o M_Dassemble_usr_McWEDA_Harris.o M_build_forces.o M_Dassemble_3c_Harris.o M_Dassemble_vxc_McWEDA_Harris.o M_Dassemble_vxc_3c_McWEDA_Harris.o
 
 # For compiling by libraries
 LIBS_THEORY = libthd_FDATA_HARRISs.a libthd_ASSEMBLERS_HARRIS.a libthd_DASSEMBLERS_HARRIS.a libthd_THEORY.a
@@ -188,7 +188,7 @@ ASSEMBLERS = M_assemble_2c_DOGS.o M_assemble_3c_DOGS.o M_assemble_ewald_Harris.o
 DFDATA = M_Fdata_1c_McWEDA_DOGS.o M_DFdata_2c.o M_DFdata_3c.o
 FDATA = M_Fdata_1c_McWEDA_DOGS.o M_Fdata_2c.o M_Fdata_3c.o
 SCF = M_charges_Lowdin.o Qmixer_Anderson_DOGS.o
-DASSEMBLERS = M_Drotations.o M_Drotations_PP.o M_Dassemble_2c_DOGS.o M_Dassemble_PP_2c.o M_Dassemble_rho_McWEDA_DOGS.o M_Dassemble_ewald_Harris.o M_Dassemble_vxc_McWEDA.o M_Dassemble_usr_McWEDA_DOGS.o M_build_forces.o M_Dassemble_3c_DOGS.o
+DASSEMBLERS = M_Drotations.o M_Drotations_PP.o M_Dassemble_2c_DOGS.o M_Dassemble_PP_2c.o M_Dassemble_rho_McWEDA_DOGS.o M_Dassemble_ewald_Harris.o M_Dassemble_vxc_McWEDA_Harris.o M_Dassemble_usr_McWEDA_DOGS.o M_build_forces.o M_Dassemble_3c_DOGS.o
 
 # For compiling by libraries
 LIBS_THEORY = libthd_FDATA_DOGS.a libthd_ASSEMBLERS_DOGS.a libthd_DASSEMBLERS_DOGS.a libthd_THEORY.a
@@ -705,11 +705,11 @@ M_Dassemble_rho_McWEDA_Harris.o : k.DASSEMBLERS/M_Dassemble_rho_McWEDA_Harris.f9
 	$(F90) $(FFLAGS) -c $^
 M_Dassemble_vxc_McWEDA_Harris.o : k.DASSEMBLERS/M_Dassemble_vxc_McWEDA_Harris.f90
 	$(F90) $(FFLAGS) -c $^
+M_Dassemble_vxc_3c_McWEDA_Harris.o : k.DASSEMBLERS/M_Dassemble_vxc_3c_McWEDA_Harris.f90
+	$(F90) $(FFLAGS) -c $^
 M_Dassemble_usr_McWEDA_DOGS.o : k.DASSEMBLERS/M_Dassemble_usr_McWEDA_DOGS.f90
 	$(F90) $(FFLAGS) -c $^
 M_Dassemble_rho_McWEDA_DOGS.o : k.DASSEMBLERS/M_Dassemble_rho_McWEDA_DOGS.f90
-	$(F90) $(FFLAGS) -c $^
-M_Dassemble_vxc_McWEDA.o : k.DASSEMBLERS/M_Dassemble_vxc_McWEDA.f90
 	$(F90) $(FFLAGS) -c $^
 M_build_forces.o : k.DASSEMBLERS/M_build_forces.f90
 	$(F90) $(FFLAGS) -c $^
