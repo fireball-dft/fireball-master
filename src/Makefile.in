@@ -27,45 +27,95 @@
 # clause at 52.227-7013.
 SHELL = /bin/bash
 
-# Choose the COMPILER
-#COMPILER = gfortran
-#COMPILER = gfortran-mp-5
-COMPILER = gfortran-4.8
-#COMPILER = ifort
+# @configure_input@
 
-LINALG = LAPACK
-#LINALG = MKL
+# Package-related substitution variables
+package        = @PACKAGE_NAME@
+version        = @PACKAGE_VERSION@
+tarname        = @PACKAGE_TARNAME@
+distdir        = $(tarname)-$(version)
 
-# Do you use DEBUG or Optimization Mode? (DEBUG/OPT)
-#MODE = OPT
-MODE = DEBUG
+# Prefix-related substitution variables
+prefix         = @prefix@
+exec_prefix    = @exec_prefix@
+bindir         = @bindir@
 
-# Turn on omp?
-OPENMP = NO
+# Tool-related substitution variables
+FC             = @FC@
+DEFS           = @DEFS@
+LIBS           = @LIBS@
+FCFLAGS        = @FCFLAGS@
+INSTALL        = @INSTALL@
+INSTALL_DATA   = @INSTALL_DATA@
+INSTALL_PROGRAM= @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-# Choose the MACHINE file
-MACHINE = GENERIC
-#MACHINE = FIREBALL
-#MACHINE = MOUNTAINEER
-#MACHINE = SPRUCE
+# VPATH-related substitution variables
+top_builddir   = @top_builddir@
+builddir       = @builddir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
 
-# Choose HARRIS or DOGS
-#THEORY = HARRIS
-THEORY = DOGS
-#THEORY = KS
+# Fireball substitution variables
+THEORY         = @THEORY@
+METHOD         = @METHOD@
+XC             = @XC@
+OPENMP         = @OPENMP@
+MPI            = @MPI@
+DEBUG          = @DEBUG@
+MODE           = @MODE@
+MACHINE        = @MACHINE@
+COMPILER       = @COMPILER@
+LINALG         = @LINALG@
 
-# Choose the METHOD - GAMMA, KPOINTS, or MDET (which is also GAMMA)
-METHOD = GAMMA
-#METHOD = KPOINTS
-#METHOD = MDET
-#METHOD = KS
+#----------------------------------------------------------------------------
+# ATTENTION:
+#
+# These variables should no be modified by editing the Makefile
+# Use the ./configure to set these variables according to your 
+# desire
 
-# Choose the XC functional
-XC = LDA
-#XC = BLYP
+# # Choose the COMPILER
+# #COMPILER = gfortran
+# #COMPILER = gfortran-mp-5
+# COMPILER = gfortran-4.8
+# #COMPILER = ifort
 
-# Use of MPI (Comment to disable)
-#MPI = TRUE
+# LINALG = LAPACK
+# #LINALG = MKL
+
+# # Do you use DEBUG or Optimization Mode? (DEBUG/OPT)
+# #MODE = OPT
+# MODE = DEBUG
+
+# # Turn on omp?
+# OPENMP = NO
+
+# # Choose the MACHINE file
+# MACHINE = GENERIC
+# #MACHINE = FIREBALL
+# #MACHINE = MOUNTAINEER
+# #MACHINE = SPRUCE
+
+# # Choose HARRIS or DOGS
+# #THEORY = HARRIS
+# THEORY = DOGS
+# #THEORY = KS
+
+# # Choose the METHOD - GAMMA, KPOINTS, or MDET (which is also GAMMA)
+# METHOD = GAMMA
+# #METHOD = KPOINTS
+# #METHOD = MDET
+# #METHOD = KS
+
+# # Choose the XC functional
+# XC = LDA
+# #XC = BLYP
+
+# # Use of MPI (Comment to disable)
+# #MPI = TRUE
+
+#----------------------------------------------------------------------------
 
 # Note: These are the machines files used by the Lewis Research Group. You need
 # to create a MACHINES file specific to your architecture.  You can use one of
@@ -74,7 +124,6 @@ include MACHINES/FIREBALL
 include MACHINES/MOUNTAINEER
 include MACHINES/SPRUCE
 include MACHINES/GENERIC
-
 
 ######################################################################
 ###
@@ -113,13 +162,12 @@ FUNCTIONS_LIGHTNING = make_cells.o cl.o epsilon.o
 MD = M_gear_quench.o
 NAMD = M_non_adiabatic_gamma.o M_non_adiabatic_coupling.o M_density_MDET.o
 OUTPUT = writeout_energies.o writeout_xyz.o writeout_xsf.o
-UTIL = absorption_gamma.o dos_gamma.o M_isosurfaces.o 
+UTIL = absorption_gamma.o dos_gamma.o M_isosurfaces.o
 SOLVESH = M_diagonalization_Lowdin_gamma.o M_kspace_Lowdin.o M_density_matrix.o
 
 # LDA is default - we change later if we want something other than LDA
 XC_FUNCTIONALS = M_xc_option3_1c.o M_xc_option3_2c.o
 CREATE = M_Goverlap.o M_rhoS_2c_McWEDA_Harris.o M_rho_3c_McWEDA_Harris.o M_rhoS_3c_McWEDA_Harris.o M_vna_Harris.o M_vna_DOGS.o M_vnl_KB.o M_bcna_3c_Harris.o M_bcna_3c_DOGS.o M_rho_2c_McWEDA_Harris.o M_overlap.o M_kinetic.o M_vxc_McWEDA_Harris.o M_Coulomb.o M_dipole_z.o M_vxc_McWEDA_DOGS.o
-
 
 # ****************************** HARRIS ******************************
 ifneq (,$(findstring HARRIS, ${THEORY}))
@@ -227,13 +275,22 @@ export
 
 all: all_old
 
-.PHONY: clean veryclean cleanall
+check:
+	@echo 'No check by now!'
+
+install:
+	@echo 'No install by now!'
+
+uninstall:
+	@echo 'No uninstall by now!'
+
+.PHONY: clean veryclean cleanall check install uninstall
 
 clean:
 	rm -f -r core *.a *.o .nfs* rii_files begin-looprc.x.ip* begin.x.ip* \
 			create.x.ip* fireball.x.ip* \
 			fireball-MDET.x.ip* lightning.x.ip* *genmod.f90 .#* \
-			ldtmp* *.mod *.mod.* *.vo *~ *.il libs/*.a include/*.mod
+			ldtmp* *.mod *.mod.* *.vo *~ *.il libs/*.a include/*.mod *.x.dSYM
 	for dir in $(DIRS) ; \
 	do \
 		if [ -e $$dir ]; then echo $$dir && cd $$dir && $(MAKE) clean && cd .. ; fi ; \
@@ -283,7 +340,7 @@ lfireball-MDET.x: x.DRIVERS/fireball-MDET.f90 $(LIBS_FIREBALL_MDET)
 # *****************************************************************************
 
 libs: libthd_GLOBAL.a libthd_FUNCTIONS.a libthd_SYSTEM.a libthd_FUNCTIONS_EXTRA.a libthd_FDATA.a libthd_FDATA_DOGS.a libthd_FDATA_HARRIS.a libthd_noMPI.a libthd_XC_FUNCTIONALS.a libthd_SOLVESH.a libthd_ASSEMBLERS_HARRIS.a libthd_ASSEMBLERS_DOGS.a libthd_ASSEMBLERS_KS.a libthd_DASSEMBLERS_HARRIS.a libthd_DASSEMBLERS_DOGS.a libthd_SCF.a libthd_MD.a libthd_NAMD.a libthd_OUTPUT.a libthd_VXC_MCWEDA.a  libthd_THEORY.a libthd_UTIL.a
-	@echo Notice: This library is excluded from compilation: libthd_VXC_HORSFIELD.a 
+	@echo Notice: This library is excluded from compilation: libthd_VXC_HORSFIELD.a
 
 libthd_GLOBAL.a:
 	cd a.GLOBAL && $(MAKE) $@
@@ -352,7 +409,7 @@ libthd_NAMD.a: libthd_SYSTEM.a libthd_SYSTEM.a
 libthd_MD.a: libthd_SYSTEM.a libthd_SYSTEM.a
 	cd m.MD && $(MAKE) $@
 
-libthd_OUTPUT.a: 
+libthd_OUTPUT.a:
 	cd o.OUTPUT && $(MAKE) $@
 
 libthd_THEORY.a: libthd_SYSTEM.a libthd_XC_FUNCTIONALS.a

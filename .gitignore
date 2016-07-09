@@ -35,3 +35,5 @@
 .svn
 *~
 results
+*.DS_Store
+autom4te.cache
