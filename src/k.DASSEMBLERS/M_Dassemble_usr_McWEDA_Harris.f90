@@ -147,10 +147,10 @@
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%nssh
-          num_neigh = s%neighbors(iatom)%neighn
           Zi = Q0(iatom)
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
@@ -192,7 +192,7 @@
             allocate (dcoulomb (norb_mu, norb_nu))
             allocate (vdcoulomb (3, norb_mu, norb_nu))
             call getDMEs_Fdata_2c (in1, in2, interaction, isubtype, z,       &
-     &                               norb_mu, norb_nu, coulomb, dcoulomb)
+     &                             norb_mu, norb_nu, coulomb, dcoulomb)
 
 ! Note that if we are calculating the on-site matrix elements, then the
 ! derivatives should be exactly zero.  This is what Otto referred to as the

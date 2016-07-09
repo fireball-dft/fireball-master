@@ -138,25 +138,27 @@
 ! ===========================================================================
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          prho_in=>s%rho_in(iatom)
-          prho_bond=>s%rho_bond(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
+
+          ! cut some lengthy notation
+          prho_in=>s%rho_in(iatom)
+          prho_bond=>s%rho_bond(iatom)
+
+! Loop over the neighbors of each iatom.
           num_neigh = s%neighbors(iatom)%neighn
           allocate (prho_in%neighbors(num_neigh))
           allocate (prho_bond%neighbors(num_neigh))
-
-! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            prho_in_neighbors=>prho_in%neighbors(ineigh)
-            prho_bond_neighbors=>prho_bond%neighbors(ineigh)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
+
+            ! cut some more lengthy notation
+            prho_in_neighbors=>prho_in%neighbors(ineigh)
+            prho_bond_neighbors=>prho_bond%neighbors(ineigh)
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
@@ -238,20 +240,18 @@
 ! First, do rho_in_atom case. Here we compute <i | v(j) | i> matrix elements.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          prho_in=>s%rho_in(iatom)
-          prho_bond=>s%rho_bond(iatom)
           matom = s%neigh_self(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
 
+          ! cut some lengthy notation
+          prho_in=>s%rho_in(iatom); prho_in_neighbors=>prho_in%neighbors(matom)
+          prho_bond=>s%rho_bond(iatom); prho_bond_neighbors=>prho_bond%neighbors(matom)
+
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            prho_in_neighbors=>prho_in%neighbors(matom)
-            prho_bond_neighbors=>prho_bond%neighbors(matom)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
@@ -405,6 +405,7 @@
         do ialpha = 1, s%natoms
           in3 = s%atom(ialpha)%imass
           r3 = s%atom(ialpha)%ratom
+
           ! loop over the common neigbor pairs of ialp
           do ineigh = 1, s%neighbors(ialpha)%ncommon
             mneigh = s%neighbors(ialpha)%neigh_common(ineigh)
@@ -568,25 +569,27 @@
 ! ===========================================================================
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          prho_in_weighted=>s%rho_in_weighted(iatom)
-          prho_bond_weighted=>s%rho_bond_weighted(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           nssh_i = species(in1)%nssh
+
+          ! cut some lengthy notation
+          prho_in_weighted=>s%rho_in_weighted(iatom)
+          prho_bond_weighted=>s%rho_bond_weighted(iatom)
+
+! Loop over the neighbors of each iatom.
           num_neigh = s%neighbors(iatom)%neighn
           allocate (prho_in_weighted%neighbors(num_neigh))
           allocate (prho_bond_weighted%neighbors(num_neigh))
-
-! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pWrho_in_neighbors=>prho_in_weighted%neighbors(ineigh)
-            pWrho_bond_neighbors=>prho_bond_weighted%neighbors(ineigh)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
+
+            ! cut some more lengthy notation
+            pWrho_in_neighbors=>prho_in_weighted%neighbors(ineigh)
+            pWrho_bond_neighbors=>prho_bond_weighted%neighbors(ineigh)
 
 ! Allocate block size
             nssh_j = species(in2)%nssh
@@ -658,19 +661,21 @@
 ! Here we compute <i|v(j)|i> matrix elements.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          prho_in_weighted=>s%rho_in_weighted(iatom)
-          prho_bond_weighted=>s%rho_bond_weighted(iatom)
           matom = s%neigh_self(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           nssh_i = species(in1)%nssh
           num_neigh = s%neighbors(iatom)%neighn
 
+          ! cut some lengthy notation
+          prho_in_weighted=>s%rho_in_weighted(iatom)
+          pWrho_in_neighbors=>prho_in_weighted%neighbors(matom)
+          prho_bond_weighted=>s%rho_bond_weighted(iatom)
+
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             ! cut some more lengthy notation
-            pWrho_in_neighbors=>prho_in_weighted%neighbors(matom)
+
             pWrho_bond_neighbors=>prho_bond_weighted%neighbors(matom)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
@@ -803,6 +808,7 @@
         do ialpha = 1, s%natoms
           in3 = s%atom(ialpha)%imass
           r3 = s%atom(ialpha)%ratom
+
           ! loop over the common neigbor pairs of ialp
           do ineigh = 1, s%neighbors(ialpha)%ncommon
             mneigh = s%neighbors(ialpha)%neigh_common(ineigh)
