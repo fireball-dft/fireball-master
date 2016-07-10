@@ -475,6 +475,7 @@ lightning-grid.x:  x.DRIVERS/lightning-grid.f90 $(OBJECTS_LIGHTNING_GRID)
 	$(F90) -o $@ $(FFLAGS) $(OMP) $^ $(LFLAGS) $(LFLAGS_FFT)
 
 fireball.x: x.DRIVERS/fireball.f90 $(OBJECTS_FIREBALL)
+	ls -al 
 	$(F90) -o $@ $(FFLAGS) $^ $(LFLAGS)
 
 fireball-MDET.x: x.DRIVERS/fireball-MDET.f90 $(OBJECTS_MDET)
