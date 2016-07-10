@@ -20,7 +20,9 @@ install:
     - ls -al
     - git clone https://github.com/fireball-dft/fireball-fireball.git
     - cd fireball-fireball
-    - ./configure
+    - ./configure --enable-THEORY=HARRIS
+    - make distcheck
+    - ./configure --enable-THEORY=DOGS
     - make distcheck
 
 script: true

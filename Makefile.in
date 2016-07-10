@@ -93,7 +93,7 @@ $(distdir): cleanall
 
 distcheck: $(distdir).tar.gz
 	gzip -cd $+ | tar xvf -
-	cd $(distdir); ./configure FC=@FC@ --enable-THEORY=DOGS --enable-DEBUG --enable-LINALG=LAPACK
+	cd $(distdir); ./configure FC=@FC@ --enable-THEORY=@THEORY@ --enable-DEBUG --enable-LINALG=LAPACK
 	$(MAKE) -C $(distdir) all check
 	$(MAKE) -C $(distdir) DESTDIR=$${PWD}/$(distdir)/_inst install uninstall
 	$(MAKE) -C $(distdir) clean
