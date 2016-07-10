@@ -49,6 +49,7 @@ cleanall:
 	$(MAKE) -C src $@
 
 distclean: cleanall
+	rm -rf autom4te.cache config.log config.status
 	rm -rf Makefile
 	rm -rf src/Makefile
 	rm -rf src/*/Makefile
@@ -60,32 +61,35 @@ $(distdir).tar.gz: FORCE $(distdir)
 	tar chof - $(distdir) | gzip -9 -c >$(distdir).tar.gz
 	rm -rf $(distdir)
 
-$(distdir):
+$(distdir): cleanall
 	mkdir -p $(distdir)/src
 	cp $(srcdir)/configure $(distdir)
 	cp $(srcdir)/config.h.in $(distdir)
 	cp $(srcdir)/install-sh $(distdir)
 	cp $(srcdir)/Makefile.in $(distdir)
 	cp $(srcdir)/src/Makefile.in $(distdir)/src
-	cp -r $(srcdir)/src/a.GLOBAL $(distdir)/src
-	cp -r $(srcdir)/src/b.FUNCTIONS $(distdir)/src
-	cp -r $(srcdir)/src/c.SYSTEM $(distdir)/src
-	cp -r $(srcdir)/src/d.FUNCTIONS_EXTRA $(distdir)/src
-	cp -r $(srcdir)/src/e.FDATA $(distdir)/src
-	cp -r $(srcdir)/src/f.MPI $(distdir)/src
-	cp -r $(srcdir)/src/g.XC_FUNCTIONALS $(distdir)/src
-	cp -r $(srcdir)/src/h.SOLVESH $(distdir)/src
-	cp -r $(srcdir)/src/j.ASSEMBLERS $(distdir)/src
-	cp -r $(srcdir)/src/k.DASSEMBLERS $(distdir)/src
-	cp -r $(srcdir)/src/l.SCF $(distdir)/src
-	cp -r $(srcdir)/src/m.MD $(distdir)/src
-	cp -r $(srcdir)/src/n.NAMD $(distdir)/src
-	cp -r $(srcdir)/src/o.OUTPUT $(distdir)/src
-	cp -r $(srcdir)/src/p.THEORY $(distdir)/src
-	cp -r $(srcdir)/src/u.UTIL $(distdir)/src
-	cp -r $(srcdir)/src/MACHINES $(distdir)/src
-	cp -r $(srcdir)/src/include $(distdir)/src
-	cp -r $(srcdir)/src/libs $(distdir)/src
+	cp -rL $(srcdir)/src/a.GLOBAL $(distdir)/src
+	cp -rL $(srcdir)/src/b.FUNCTIONS $(distdir)/src
+	cp -rL $(srcdir)/src/c.SYSTEM $(distdir)/src
+	cp -rL $(srcdir)/src/d.FUNCTIONS_EXTRA $(distdir)/src
+	cp -rL $(srcdir)/src/e.FDATA $(distdir)/src
+	cp -rL $(srcdir)/src/f.MPI $(distdir)/src
+	cp -rL $(srcdir)/src/g.XC_FUNCTIONALS $(distdir)/src
+	cp -rL $(srcdir)/src/h.SOLVESH $(distdir)/src
+	cp -rL $(srcdir)/src/j.ASSEMBLERS $(distdir)/src
+	cp -rL $(srcdir)/src/k.DASSEMBLERS $(distdir)/src
+	cp -rL $(srcdir)/src/l.SCF $(distdir)/src
+	cp -rL $(srcdir)/src/m.MD $(distdir)/src
+	cp -rL $(srcdir)/src/n.NAMD $(distdir)/src
+	cp -rL $(srcdir)/src/o.OUTPUT $(distdir)/src
+	cp -rL $(srcdir)/src/p.THEORY $(distdir)/src
+	cp -rL $(srcdir)/src/u.UTIL $(distdir)/src
+	cp -rL $(srcdir)/src/MACHINES $(distdir)/src
+	cp -rL $(srcdir)/src/include $(distdir)/src
+	cp -rL $(srcdir)/src/libs $(distdir)/src
+	rm -rf $(distdir)/Makefile
+	rm -rf $(distdir)/src/Makefile
+	rm -rf $(distdir)/src/*/Makefile
 
 distcheck: $(distdir).tar.gz
 	gzip -cd $+ | tar xvf -

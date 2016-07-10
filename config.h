@@ -5,13 +5,13 @@
 /* #undef BLYP */
 
 /* DEBUG enabled */
-#define DEBUG 1
+/* #undef DEBUG */
 
 /* THEORY=DOGS enabled */
-#define DOGS 1
+/* #undef DOGS */
 
 /* Define to 1 if you have the `sqrt' function. */
-#define HAVE_SQRT 1
+/* #undef HAVE_SQRT */
 
 /* METHOD=KPOINTS enabled */
 /* #undef KPOINTS */
