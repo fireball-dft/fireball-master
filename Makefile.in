@@ -49,7 +49,7 @@ cleanall:
 	$(MAKE) -C src $@
 
 distclean: cleanall
-	rm -rf autom4te.cache config.log config.status
+	rm -rf autom4te.cache config.log config.status config.h
 	rm -rf Makefile
 	rm -rf src/Makefile
 	rm -rf src/*/Makefile
