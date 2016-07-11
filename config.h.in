@@ -12,6 +12,9 @@
 /* Define to 1 if you have the `sqrt' function. */
 #undef HAVE_SQRT
 
+/* XCTHEORY=HORSFIELD enabled */
+#undef HORSFIELD
+
 /* METHOD=KPOINTS enabled */
 #undef KPOINTS
 

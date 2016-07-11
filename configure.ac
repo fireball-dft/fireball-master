@@ -70,6 +70,16 @@ AS_IF([test "x$enable_XC" = "xLIBXC"], [
 ])
 AC_SUBST([XC],[${XC}])
 
+dnl XCTHEORY
+AC_ARG_ENABLE([XCTHEORY],
+    AS_HELP_STRING([--enable-XCTHEORY=[ARG]], [Select XC Theory Level MCWEDA (default) or HORSFIELD ]))
+XCTHEORY=MCWEDA
+AS_IF([test "x$enable_XCTHEORY" = "xHORSFIELD"], [
+  AC_DEFINE([HORSFIELD], 1, [XCTHEORY=HORSFIELD enabled])
+  XCTHEORY=HORSFIELD
+])
+AC_SUBST([XCTHEORY],[${XCTHEORY}])
+
 dnl MACHINE
 AC_ARG_ENABLE([MACHINE],
     AS_HELP_STRING([--enable-MACHINE=[ARG]], [Select MACHINE (GENERIC (default), FIREBALL, SPRUCE, etc) ]))
@@ -170,14 +180,15 @@ echo \
  Compiler: '${FC} ${FCFLAGS} ${CPPFLAGS}'
 
  Package features:
-   THEORY : ${THEORY}
-   METHOD : ${METHOD}
-   XC     : ${XC}
+   THEORY   : ${THEORY}
+   METHOD   : ${METHOD}
+   XC       : ${XC}
+   XCTHEORY : ${XCTHEORY}
 
-   OPENMP : ${OPENMP}
-   MPI    : ${MPI}
-   DEBUG  : ${DEBUG}
-   OPT    : ${OPT}
+   OPENMP   : ${OPENMP}
+   MPI      : ${MPI}
+   DEBUG    : ${DEBUG}
+   OPT      : ${OPT}
 
    MACHINE  : ${MACHINE}
    COMPILER : ${COMPILER}
