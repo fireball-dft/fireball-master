@@ -1,5 +1,4 @@
-SCF = M_charges_Lowdin.o Qmixer_Anderson_DOGS.o Qmixer_Anderson_Harris.o
-# Qmixer_Anderson_grid.o
+SCF = M_charges_Lowdin.o Qmixer_Anderson.o
 
 all: libthd_SCF.a
 
@@ -13,3 +12,6 @@ libthd_SCF.a: $(SCF)
 
 %.o: %.f90
 	${F90} ${FFLAGS} -c $< -I../include
+
+%.o: %.F90
+	${F90} ${DEFS} -I.. -I../.. ${FFLAGS} -c $< -I../include

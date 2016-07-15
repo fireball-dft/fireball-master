@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 ! copyright info:
 !
 !                             @Copyright 2012
@@ -120,8 +124,10 @@
 ! ===========================================================================
         integer ispecies                          !< counter for number of species
         integer nssh                              !< counters for number of shells
-        integer issh, jssh, kssh
-
+        integer issh, jssh
+#ifdef DOGS
+        integer kssh
+#endif
         character (len=32) filename
 
 ! Allocate Arrays
@@ -155,7 +161,7 @@
         end do
         close (11)
 
-
+#ifdef DOGS
 ! ***************************************************************************
 !                       R E A D    P O T E N T I A L S
 ! ***************************************************************************
@@ -201,6 +207,7 @@
           end do
         end do
         close (11)
+#endif
 
 ! Deallocate Arrays
 ! ===========================================================================
@@ -258,9 +265,11 @@
 ! ===========================================================================
         do ispecies = 1, nspecies
           deallocate (vxc_1c(ispecies)%E)
-          deallocate (vxc_1c(ispecies)%dE)
           deallocate (vxc_1c(ispecies)%V)
+#ifdef DOGS
+          deallocate (vxc_1c(ispecies)%dE)
           deallocate (vxc_1c(ispecies)%dV)
+#endif
         end do
 
 ! Deallocate Arrays

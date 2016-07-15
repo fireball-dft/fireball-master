@@ -2549,6 +2549,9 @@ if test "x$enable_METHOD" = "xMDET"; then :
 
 $as_echo "#define MDET 1" >>confdefs.h
 
+
+$as_echo "#define GAMMA 1" >>confdefs.h
+
   METHOD=MDET
 
 fi
@@ -2560,6 +2563,14 @@ $as_echo "#define KS 1" >>confdefs.h
   METHOD=KS
 
 fi
+if test "x${METHOD}" = "xGAMMA"; then :
+
+
+$as_echo "#define GAMMA 1" >>confdefs.h
+
+
+fi
+
 METHOD=${METHOD}
 
 

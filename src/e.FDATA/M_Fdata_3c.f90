@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2008
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -10,7 +10,7 @@
 ! Previous and/or current contributors:
 ! Auburn University - Jian Jun Dong
 ! Caltech - Brandon Keith
-! Dublin Institute of Technology - Barry Haycock
+! West Virginia University - Barry Haycock
 ! Pacific Northwest National Laboratory - Kurt Glaesemann
 ! University of Texas at Austin - Alex Demkov
 ! Ohio University - Dave Drabold
@@ -26,6 +26,7 @@
 ! { (b) (3) (ii) } of the Rights in Technical Data and Computer Software
 ! clause at 52.227-7013.
 
+
 ! M_Fdata_3c
 ! Module Description
 ! ===========================================================================
@@ -36,6 +37,8 @@
 !!       read_Fdata_3c.f90 - reads in the three-center datafiles.
 !!       getMEs_Fdata_3c.f90 - interpolates the three-center data and gets the
 !!                             matrix elements.
+!!       getDMEs_Fdata_3c   - interpolates the three-center data and gets the
+!!                            derivitive matrix elements.
 !!       destroy_Fdata_3c.f90 - deallocates all the three-center fdata arrays.
 !!
 !! For a complete list of the interactions see the files 3c.Z1.Z2.dir now
@@ -58,6 +61,7 @@
 ! ===========================================================================
         module M_Fdata_3c
         use M_species
+        !use M_Drotations
 
         include '../include/interactions_3c.h'
 
@@ -176,14 +180,14 @@
 ! Procedure
 ! ===========================================================================
         write (ilogfile,*)
-        write (ilogfile,*) ' Reading three-center interactions '
-        write (ilogfile,*) ' --------------------------------- '
+        write (ilogfile,'(A)') 'Reading three-center interactions '
+        write (ilogfile,'(A)') '--------------------------------- '
         write (ilogfile,*)
 
         do ispecies = 1, nspecies
           do jspecies = 1, nspecies
             do kspecies = 1, nspecies
-              write (ilogfile,'(2x, A18, I3, I3, I3)') ' species triplet: ',   &
+              write (ilogfile,'(4x, A18, I4, I4, I4)') '- species triplet: ',   &
       &                     species(ispecies)%nZ, species(jspecies)%nZ,      &
       &                     species(kspecies)%nZ
 
@@ -228,8 +232,7 @@
                 ! read the actual fdata
                 do iy = 1, pFdata_cell%ny    ! loop over bondlengths
                   do ix = 1, pFdata_cell%nx    ! loop over 3rd atom distance
-                    read (12,*) (pFdata_cell%Fdata_3c(ix, iy, iME),           &
-     &                                                iME = 1, nME3c_max)
+                    read (12,*) (pFdata_cell%Fdata_3c(ix, iy, iME), iME = 1, nME3c_max)
                   end do
                 end do
                 close (12)
@@ -245,8 +248,7 @@
                 ! read the mapping (mu,nu,mvalue)
                 read (13,*) (pFdata_cell%mu_3c(iindex), iindex = 1, nME3c_max)
                 read (13,*) (pFdata_cell%nu_3c(iindex), iindex = 1, nME3c_max)
-                read (13,*)                                                   &
-     &                 (pFdata_cell%mvalue_3c(iindex), iindex = 1, nME3c_max)
+                read (13,*) (pFdata_cell%mvalue_3c(iindex), iindex = 1, nME3c_max)
               end do ! datafile for (ispecies, jspecies, kspecies)
               close (11)
               close (13)
@@ -330,10 +332,10 @@
 ! ===========================================================================
 ! Set up Legendre polynomials
         cost2 = cost**2
-        sint = sqrt(max(0.0d0, 1.0d0 - cost2))
+        sint = sqrt(max(1.0d-5, 1.0d0 - cost2))
         p(0) = 1.0d0
         p(1) = cost
-        p(2) = 0.5d0*(3.0d0*cost2 - 1.0d0)
+        p(2) = 0.5d0*(3.0d0*cost2 -1.0d0)
         p(3) = 0.5d0*cost*(5.0d0*cost2 - 3.0d0)
         p(4) = 0.125d0*(3.0d0 - cost2*(30.0d0 - 35.0d0*cost2))
 
@@ -345,7 +347,6 @@
         Fdata = 0.0d0
 
         ! loop over theta
-! CHANGE ME
         do itheta = 1, P_maxtheta
           pFdata_cell =>                                                     &
      &     pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(iint,isub,itheta))
@@ -359,10 +360,10 @@
           imu = pFdata_cell%mu_3c(iindex)
           inu = pFdata_cell%nu_3c(iindex)
           mvalue = pFdata_cell%mvalue_3c(iindex)
-          if (mvalue .eq. 1) then
-            hmbox(imu,inu) = Fdata(iindex)*sint
-          else
+          if (mvalue .ne. 1) then
             hmbox(imu,inu) = Fdata(iindex)
+          else
+            hmbox(imu,inu) = Fdata(iindex)*sint
           end if
         end do
 
@@ -459,7 +460,7 @@
      &        - pFdata_cell%Fdata_3c(ix, iy, 1))/dx
         gy = (pFdata_cell%Fdata_3c(ix, iy + 1, 1)                             &
      &        - pFdata_cell%Fdata_3c(ix, iy, 1))/dy
-        gg = sqrt(gx**2 + gy**2)
+        gg = gx**2 + gy**2
 
 ! We choose one of three ways to interpolate based on the size of the
 ! gradient (derivative). If the value of the derivative is tiny, then
@@ -561,6 +562,437 @@
 
         return
         end subroutine addMEs_Fdata_3c
+
+! ===========================================================================
+! getDMEs_Fdata_3c
+! ===========================================================================
+! Subroutine Description
+! ===========================================================================
+!>       This routine loops over all the Legendre angles and calls the
+!! interpolation to find the values of the derivitives w.r.t.x and y at the
+!! given angles.  The function f(x) is a three-center interaction function
+!! read from read_Fdata_3c.  After the data is interpolated, the data is
+!! multiplied by the appropriate Legendre fundtion and then 'recovered' into
+!! the matrix form.
+!! This subroutine is similar ot the getMES, but returns derivitives.
+
+! ===========================================================================
+! Code written by:
+!> @author Ning Ma
+!! @author James P. Lewis
+!! @author Barry J. Haycock
+! Box 6315, 209 Hodges Hall
+! Department of Physics
+! West Virginia University
+! Morgantown, WV 26506-6315
+!
+! (304) 293-3422 x1409 (office)
+! (304) 293-5732 (FAX)
+! ===========================================================================
+!
+! Subroutine Declaration
+! ===========================================================================
+        subroutine getDMEs_Fdata_3c (ispecies, jspecies, kspecies, iint, isub,&
+     &                               x, y, norb_mu, norb_nu, cost, rhat,      &
+     &                               sighat, hmbox, dphmbox, dxhmbox, dyhmbox)
+        implicit none
+
+! Argument Declaration and Description
+! ===========================================================================
+! Input
+        integer, intent (in) :: ispecies, jspecies, kspecies         !< species
+        integer, intent (in) :: iint, isub            !< integral type, subtype
+        integer, intent (in) :: norb_mu, norb_nu
+
+        real, intent (in) :: x, y                     !< distances between pairs
+        real, intent (in) :: cost                     !< cosine bond-charge angle
+        real, intent (in), dimension (3) :: rhat
+        real, intent (in), dimension (3) :: sighat
+
+! Output
+        real, intent (out), dimension (norb_mu, norb_nu) :: hmbox
+        real, intent (out), dimension (norb_mu, norb_nu) :: Dphmbox
+        real, intent (out), dimension (norb_mu, norb_nu) :: Dxhmbox
+        real, intent (out), dimension (norb_mu, norb_nu) :: Dyhmbox
+
+! Variable Declaration and Description
+! ===========================================================================
+        integer iindex, imu, inu               !< counters for building matrix
+        integer itheta                         !< which angle?
+        integer mvalue                         !< value of quantum number m
+
+        real sint                              !< sin of bond-charge angle
+        real cost2                             !< cost**2
+
+        real :: p(0:P_maxtheta - 1)            !< Legendre polys p(cost)
+        real :: Dp(0:P_maxtheta - 1)           !< Legendre polys Dp(cost)
+        real, dimension (:), allocatable :: Fdata      !< F(x)
+        real, dimension (:), allocatable :: DpFdata    !< dF(x)/dTheta
+        real, dimension (:), allocatable :: DxFdata    !< dF(x)/dx
+        real, dimension (:), allocatable :: DyFdata    !< dF(x)/dy
+
+        type(T_Fdata_cell_3c), pointer :: pFdata_cell
+        type(T_Fdata_bundle_3c), pointer :: pFdata_bundle
+
+! Procedure
+! ===========================================================================
+! Set up Legendre polynomials
+        if (.false.) cost2 = rhat(1)
+        if (.false.) cost2 = sighat(1)
+
+        cost2 = cost**2
+        sint = sqrt(max(1.0d-5, 1.0d0 - cost2))
+        p(0) = 1.0d0
+        p(1) = cost
+        p(2) = 0.5d0*(3.0d0*cost2 -1.0d0)
+        p(3) = 0.5d0*cost*(5.0d0*cost2 - 3.0d0)
+        p(4) = 0.125d0*(3.0d0 - cost2*(30.0d0 - 35.0d0*cost2))
+
+        Dp(0) = 0.0d0
+        Dp(1) = 1.0d0
+        Dp(2) = 3.0d0*cost
+        Dp(3) = (15.0d0*cost2 - 3.0d0)/2.0d0
+        Dp(4) = (35.0d0*cost*cost2 - 15.0d0*cost)/2.0d0
+
+        ! initialize, finding the correct fdata bundle
+        pFdata_bundle => Fdata_bundle_3c(ispecies, jspecies, kspecies)
+        pFdata_cell =>                                                       &
+     &    pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(iint,isub,1))
+        allocate (Fdata(pFdata_cell%nME))
+        allocate (DpFdata(pFdata_cell%nME))
+        allocate (DxFdata(pFdata_cell%nME))
+        allocate (DyFdata(pFdata_cell%nME))
+        Fdata = 0.0d0
+        DpFdata = 0.0d0
+        DxFdata = 0.0d0
+        DyFdata = 0.0d0
+
+        ! loop over theta
+        do itheta = 1, P_maxtheta
+          pFdata_cell =>                                                     &
+     &      pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(iint,isub,itheta))
+          call addDMEs_Fdata_3c (pFdata_cell, x, y, p(itheta - 1),           &
+     &                           dp(itheta - 1), pFdata_cell%nME, DpFdata,   &
+     &                           DxFdata, DyFdata, Fdata)
+        end do
+
+        ! recover matrices
+        Dphmbox = 0.0d0
+        Dxhmbox = 0.0d0
+        Dyhmbox = 0.0d0
+
+        do iindex = 1, pFdata_cell%nME
+          imu = pFdata_cell%mu_3c(iindex)
+          inu = pFdata_cell%nu_3c(iindex)
+          mvalue = pFdata_cell%mvalue_3c(iindex)
+          if (mvalue .ne. 1) then
+            hmbox(imu,inu) = Fdata(iindex)
+            Dphmbox(imu,inu) = DpFdata(iindex)
+            Dxhmbox(imu,inu) = DxFdata(iindex)
+            Dyhmbox(imu,inu) = DyFdata(iindex)
+          else
+            hmbox(imu,inu) = Fdata(iindex)*sint
+            Dphmbox(imu,inu) = DpFdata(iindex)*sint - cost*Fdata(iindex)/sint
+            Dxhmbox(imu,inu) = DxFdata(iindex)*sint
+            Dyhmbox(imu,inu) = DyFdata(iindex)*sint
+          end if
+        end do
+
+! Deallocate Arrays
+! ===========================================================================
+        deallocate (Fdata)
+        deallocate (DpFdata)
+        deallocate (DxFdata)
+        deallocate (DyFdata)
+
+
+! Format Statements
+! ===========================================================================
+        return
+        end subroutine getDMEs_Fdata_3c
+
+
+! addMEs_Fdata_3c
+! ===========================================================================
+! Subroutine Description
+! ===========================================================================
+!>       This routine uses interpolation to find the value of f(x) for any x,   !BaZ CHANGEME!!!
+!! given an array of equally spaced points for f(x).  The function f(x) is a
+!! three-center interaction function read from read_Fdata_3c.
+!!
+!! For polynomial interpolation see Mathews and Walker, p.329
+
+! ===========================================================================
+! Code written by:
+!> @author Ning Ma
+!! @author James P. Lewis
+!! @author Barry J. Haycock
+! Box 6315, 209 Hodges Hall
+! Department of Physics
+! West Virginia University
+! Morgantown, WV 26506-6315
+!
+! (304) 293-3422 x1409 (office)
+! (304) 293-5732 (FAX)
+! ===========================================================================
+        subroutine addDMEs_Fdata_3c (pFdata_cell, x, y, ptheta, Dptheta, &
+        &                            nME, Dpresult, Dxresult, Dyresult, result)
+        implicit none
+
+! Argument Declaration and Description
+! ===========================================================================
+! Input
+        integer, intent (in) :: nME         !< number of matrix elements
+
+        real, intent(in) :: x, y            !< distances from atom of interest
+        real, intent(in) :: ptheta          !< p is the Legendre multiplier
+        real, intent(in) :: Dptheta         !< Dp is the Legendre multiplier
+
+        type(T_Fdata_cell_3c), pointer :: pFdata_cell !< FIXME
+
+! Input and Output
+        real, intent(inout), dimension (nME) :: Dxresult !< FIXME
+        real, intent(inout), dimension (nME) :: Dyresult !< FIXME
+        real, intent(inout), dimension (nME) :: Dpresult !< FIXME
+        real, intent(inout), dimension (nME) :: result !< FIXME
+
+       real, dimension (nME) :: interim !< FIXME
+
+! Variable Declaration and Description
+! ===========================================================================
+        integer ix, iy
+        integer k
+        integer nME3c_max                   !< number of matrix elements
+
+        real dx, dy
+        real, allocatable, dimension (:) :: gx, gy, gg
+        real px, py
+
+! data arrays for interpolation
+        real, allocatable, dimension (:) :: bb0, bb1, bb2, bb3
+        real, allocatable, dimension (:) :: f1m1, f1m2, f1m3, f0p3, f0p6
+        real, allocatable, dimension (:) :: f1p3, f1p6, f2p1
+        real, allocatable, dimension (:, :) :: g, gp
+
+! Local Parameters and Data Declaration
+! ===========================================================================
+! tolerance (may be needed to avoid roundoff error in the calling program)
+! if xin > xmax but within, say, .001% of xmax then ignore
+        real, parameter :: P_tiny = 1.0d-10
+        real, parameter :: P_small = 1.0d0-8
+        nME3c_max = pFdata_cell%nME
+
+        ! Allocate the arrays used in Method 3
+        allocate (bb0(nME3c_max), bb1(nME3c_max), bb2(nME3c_max))
+        allocate (bb3(nME3c_max), f1m1(nME3c_max), f1m2(nME3c_max))
+        allocate (f1m3(nME3c_max), f0p3(nME3c_max), f0p6(nME3c_max))
+        allocate (f1p3(nME3c_max), f1p6(nME3c_max), f2p1(nME3c_max))
+        allocate (g(-1:2,nME3c_max))
+        allocate (gp(-1:2,nME3c_max))
+
+! Procedure
+! ===========================================================================
+! Initialize
+        dx = pFdata_cell%xmax/(pFdata_cell%nx - 1.0d0)
+        dy = pFdata_cell%ymax/(pFdata_cell%ny - 1.0d0)
+
+        ix = int(x/dx) +1
+        iy = int(y/dy) +1
+
+        if (ix .lt. 2) ix = 2
+        if (iy .lt. 2) iy = 2
+
+        if (ix .gt. pFdata_cell%nx - 2) ix = pFdata_cell%nx - 2
+        if (iy .gt. pFdata_cell%ny - 2) iy = pFdata_cell%ny - 2
+
+        px = x/dx - ix + 1.0d0
+        py = y/dy - iy + 1.0d0
+
+! ***************************************************************************
+! Adaptive interpolation - estimate gradient:           !Baz, think this should be an array, methinks. Yes Fdata_3c is (ix, iy, iME)
+        allocate (gx (nME)); gx = 0.0d0
+        allocate (gy (nME)); gy = 0.0d0
+        allocate (gg (nME)); gg = 0.0d0
+
+        gx = (pFdata_cell%Fdata_3c(ix + 1, iy, :)                             &
+     &        - pFdata_cell%Fdata_3c(ix, iy, :))/dx
+        gy = (pFdata_cell%Fdata_3c(ix, iy + 1, :)                             &
+     &        - pFdata_cell%Fdata_3c(ix, iy, :))/dy
+        gg = gx**2 + gy**2
+
+! We choose one of three ways to interpolate based on the size of the
+! gradient (derivative). If the value of the derivative is tiny, then
+! do very simple interpolation. If small, then something a little more
+! complicated. If neither, then something even MORE complicated.
+
+! METHOD 1
+! Do three point linear bivariate interpolation
+! Handbook of Mathematical Functions..., edited by M. Abramowitz
+! and I.A. Stegun, Dover edition, Pg. 882, Eq. 25.2.65
+        where (gg .lt. P_tiny)
+         interim = ((1.0d0 - px - py)*pFdata_cell%Fdata_3c(ix,iy,:)  &
+     &                                    + px*pFdata_cell%Fdata_3c(ix+1,iy,:)&
+     &                                    + py*pFdata_cell%Fdata_3c(ix,iy+1,:))
+         result = result + ptheta*interim
+         Dpresult = Dpresult + Dptheta*interim
+         Dxresult = Dxresult + ptheta*gx
+         Dyresult = Dyresult + ptheta*gy
+
+
+! METHOD 2
+! Do quadratic bivariate interpolation (six point formula, Eq. 25.2.67)
+        elsewhere (gg .lt. P_small)
+          interim = (py*(py-1)*0.5d0*pFdata_cell%Fdata_3c(ix,iy-1,:) &
+     &                      + px*(px-1)*0.5d0*pFdata_cell%Fdata_3c(ix-1,iy,:) &
+     &        + (1.0d0 + px*py - px**2 - py**2)*pFdata_cell%Fdata_3c(ix,iy,:) &
+     &      + px*(px - 2.0d0*py + 1.0d0)*0.5d0*pFdata_cell%Fdata_3c(ix+1,iy,:)&
+     &      + py*(py - 2.0d0*px + 1.0d0)*0.5d0*pFdata_cell%Fdata_3c(ix,iy+1,:)&
+     &                      + px*py*pFdata_cell%Fdata_3c(ix+1,iy+1,:))
+
+          result = ptheta*interim
+          Dpresult = Dpresult + Dptheta*interim
+
+          Dxresult = Dxresult + ptheta                                                 &
+     &    *(((pFdata_cell%Fdata_3c(ix+1,iy+1,:) - pFdata_cell%Fdata_3c(ix+1,iy,:)      &
+     &         - pFdata_cell%Fdata_3c(ix,iy+1,:) + pFdata_cell%Fdata_3c(ix,iy,:))*py   &
+     &         + (pFdata_cell%Fdata_3c(ix-1,iy,:) + pFdata_cell%Fdata_3c(ix+1,iy,:)    &
+     &         - 2.0d0*pFdata_cell%Fdata_3c(ix,iy,:))*px - 0.5d0*(pFdata_cell%Fdata_3c(ix-1,iy,:)               &
+     &         - pFdata_cell%Fdata_3c(ix+1,iy,:)))/dx)
+
+          Dyresult = Dyresult + ptheta                                                   &
+           *(((pFdata_cell%Fdata_3c(ix+1,iy+1,:) - pFdata_cell%Fdata_3c(ix+1,iy,:)       &
+     &      - pFdata_cell%Fdata_3c(ix,iy+1,:) + pFdata_cell%Fdata_3c(ix,iy,:))*px       &
+     &            + (pFdata_cell%Fdata_3c(ix,iy-1,:) + pFdata_cell%Fdata_3c(ix,iy+1,:) &
+     &            - 2.0d0*pFdata_cell%Fdata_3c(ix,iy,:))*py                              &
+     &            - 0.5d0*(pFdata_cell%Fdata_3c(ix,iy-1,:) - pFdata_cell%Fdata_3c(ix,iy+1,:)))/dy)
+
+!          dQ_Ldx = ((fun(1,1) - fun(1,0) - fun(0,1) + fun(0,0))*py           &
+!     &            + (fun(-1,0) + fun(1,0) - 2.0d0*fun(0,0))*px               &
+!     &            - 0.5d0*(fun(-1,0) - fun(1,0)))/hx
+!          dQ_Ldy = ((fun(1,1) - fun(1,0) - fun(0,1) + fun(0,0))*px           &
+!     &            + (fun(0,-1) + fun(0,1) - 2.0d0*fun(0,0))*py               &
+!     &            - 0.5d0*(fun(0,-1) - fun(0,1)))/hy
+        end where
+
+
+! METHOD 3
+! Interpolate one direction, then interpolate using these values to get
+! the final value.  Use Eq. 25.2.13 (4 point intepolater).
+! Total number of points used is 16
+          nME3c_max = pFdata_cell%nME
+
+          do k = -1, 2
+            where (gg .gt. P_small)
+            f1m1 = pFdata_cell%Fdata_3c(ix+k,iy-1,:)
+            f1m2 = 2.0d0*f1m1
+            f1m3 = 3.0d0*f1m1
+
+            f0p3 = 3.0d0*pFdata_cell%Fdata_3c(ix+k,iy,:)
+            f0p6 = 2.0d0*f0p3
+
+            f1p3 = 3.0d0*pFdata_cell%Fdata_3c(ix+k,iy+1,:)
+            f1p6 = 2.0d0*f1p3
+
+            f2p1 = pFdata_cell%Fdata_3c(ix+k,iy+2,:)
+
+            bb3 = - f1m1 + f0p3 - f1p3 + f2p1
+            bb2 = f1m3 - f0p6 + f1p3
+            bb1 = - f1m2 - f0p3 + f1p6 - f2p1
+            bb0 = f0p6
+
+            g(k,:) = ((bb3*py + bb2)*py + bb1)*py + bb0
+            gp(k,:) = ((3*bb3*py + 2*bb2)*py + bb1)
+            end where
+          end do
+
+          where (gg .gt. P_small)
+
+          f1m1 = g(-1,:)
+          f1m2 = 2.0d0*f1m1
+          f1m3 = 3.0d0*f1m1
+
+          f0p3 = 3.0d0*g(0,:)
+          f0p6 = 2.0d0*f0p3
+
+          f1p3 = 3.0d0*g(1,:)
+          f1p6 = 2.0d0*f1p3
+
+          f2p1 = g(2,:)
+
+          bb3 = - f1m1 + f0p3 - f1p3 + f2p1
+          bb2 = f1m3 - f0p6 + f1p3
+          bb1 = - f1m2 - f0p3 + f1p6 - f2p1
+          bb0 = f0p6
+          interim = (((bb3*px + bb2)*px + bb1)*px + bb0)/36.0d0
+          result = result + ptheta*interim
+          Dpresult = Dpresult + Dptheta*interim
+
+          Dxresult = Dxresult + ptheta*((3*bb3*px + 2*bb2)*px + bb1)/(36.0d0*dx)
+          f1m1 = gp(-1,:)
+          f1m2 = 2*f1m1
+          f1m3 = 3*f1m1
+
+          f0p3 = 3*gp(0,:)
+          f0p6 = 2*f0p3
+
+          f1p3 = 3*gp(1, :)
+          f1p6 = 2*f1p3
+
+          f2p1 = gp(2,:)
+
+          bb3 = - f1m1 + f0p3 - f1p3 + f2p1
+          bb2 = f1m3 - f0p6 + f1p3
+          bb1 = - f1m2 - f0p3 + f1p6 - f2p1
+          bb0 = f0p6
+
+          Dyresult = Dyresult + ptheta*(((bb3*px + bb2)*px + bb1)*px + bb0)/(36.0d0*dy)
+
+          end where
+
+!           dQ_Ldx = ((3*bb3*px + 2*bb2)*px + bb1)/(36.0d0*hx)
+!
+!           f1m1 = gp(-1)
+!           f1m2 = 2*f1m1
+!           f1m3 = 3*f1m1
+!
+!           f0p3 = 3*gp(0)
+!           f0p6 = 2*f0p3
+!
+!           f1p3 = 3*gp(1)
+!           f1p6 = 2*f1p3
+!
+!           f2p1 = gp(2)
+!
+!           bb3 = - f1m1 + f0p3 - f1p3 + f2p1
+!           bb2 = f1m3 - f0p6 + f1p3
+!           bb1 = - f1m2 - f0p3 + f1p6 - f2p1
+!           bb0 = f0p6
+!
+!           dQ_Ldy = (((bb3*px + bb2)*px + bb1)*px + bb0)/(36.0d0*hy)
+
+
+ ! Deallocate the arrays used in Method 3.
+          deallocate (bb0, bb1, bb2, bb3)
+          deallocate (f1m1, f1m2, f1m3, f0p3, f0p6)
+          deallocate (f1p3, f1p6, f2p1, g)
+
+! A final note, if you are interested in splines, you should start with
+! "Handbook on SPLINES for the User" by Eugene V. Shikin and
+! Alexander I. Plis.  1995, CRC Press.  Most other books on slines and
+! bivariate interpolation are nothing but proofs and abstract math, but
+! this one gives the real equations you need to get the actual work done.
+
+! Deallocate Arrays
+! ===========================================================================
+! None
+        deallocate (gx, gy, gg)
+
+! Format Statements
+! ===========================================================================
+! None
+
+        return
+        end subroutine addDMEs_Fdata_3c
 
 
 ! ===========================================================================

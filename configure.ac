@@ -48,12 +48,17 @@ AS_IF([test "x$enable_METHOD" = "xKPOINTS"], [
 ])
 AS_IF([test "x$enable_METHOD" = "xMDET"], [
   AC_DEFINE([MDET], 1, [METHOD=MDET enabled])
+  AC_DEFINE([GAMMA], 1, [METHOD=MDET enabled and MDET is also GAMMA])
   METHOD=MDET
 ])
 AS_IF([test "x$enable_METHOD" = "xKS"], [
   AC_DEFINE([KS], 1, [METHOD=KS enabled])
   METHOD=KS
 ])
+AS_IF([test "x${METHOD}" = "xGAMMA"], [
+  AC_DEFINE([GAMMA], 1, [METHOD=GAMMA enabled])
+])
+
 AC_SUBST([METHOD],[${METHOD}])
 
 dnl XC

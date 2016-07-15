@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 ! copyright info:
 !                             @Copyright 2016
 !                           Fireball Committee
@@ -18,7 +22,6 @@
 ! West Virginia University - Khorgolkhuu Odbadrakh
 ! also Gary Adams, Juergen Frisch, John Tomfohr, Kevin Schmidt,
 !      and Spencer Shellman
-
 !
 ! RESTRICTED RIGHTS LEGEND
 ! Use, duplication, or disclosure of this software and its documentation
@@ -31,13 +34,13 @@
 ! Program Description
 ! ===========================================================================
 !>       This is a version of matrix diagonalization for the Gamma kpoint.
-!! The set of routines here use the blas library.
-!!      It contains the following subroutines within the module:
-!!
-!!      diagonalization_initialize - initialize the n x n matrices
-!!      diagonalize_S - diagonalizes the overlap matrix
-!!      diagonalize_H_Lowdin - perform Lowdin transformation of Hamiltonian
-!!                             and then diagonalize the transformed Hamiltonian
+!  The set of routines here use the blas library.
+!       It contains the following subroutines within the module:
+! 
+!       diagonalization_initialize - initialize the n x n matrices
+!       diagonalize_S - diagonalizes the overlap matrix
+!       diagonalize_H_Lowdin - perform Lowdin transformation of Hamiltonian
+!                              and then diagonalize the transformed Hamiltonian
 !
 ! ===========================================================================
 ! Code written by:
@@ -57,17 +60,27 @@
 
 ! Type declarations for Hamiltonian matrix in k-space
 ! =========================================================================
+
 ! Define eigenvalues as 1 dimensional array
         double precision, allocatable :: eigen (:)
 
 ! define matrices
+#ifdef GAMMA
         double precision, allocatable :: Smatrix (:, :)
         double precision, allocatable, save :: S12matrix (:, :)
         double precision, allocatable :: Hmatrix (:, :)
+#else
+        double complex, allocatable :: Smatrix (:, :)
+        double complex, allocatable, save :: S12matrix (:, :)
+        double complex, allocatable :: Hmatrix (:, :)
+#endif
 
 ! define parameter for linear dependence criteria
         double precision, parameter :: overtol = 1.0d-4
 
+! this value detemines if the eigenvalue should be accounted for:
+! lam<overtol then it is considered zero and otherwise if lam>overtol
+! ===========================================================================
 ! module procedures
         contains
 
@@ -118,7 +131,15 @@
         Smatrix = 0.0d0
         Hmatrix = 0.0d0
 
-! End subroutine
+! Deallocate Arrays
+! ===========================================================================
+! None
+
+! Format Statements
+! ===========================================================================
+! None
+
+! End Subroutine
 ! ===========================================================================
         return
         end subroutine diagonalization_initialize
@@ -169,11 +190,23 @@
         integer mineig                      !< minimum non-zero eigenvalue
         integer imu, jmu                    !< counters over eigenstates
 
+#ifdef GAMMA
         double precision, allocatable :: rwork (:)   ! working vector
+#else
+        integer lwork
+        double complex, allocatable :: rwork (:)   ! working vector
+        double complex, allocatable :: work (:)
+#endif
 
 ! Allocate Arrays
 ! ===========================================================================
+#ifdef GAMMA
         lrwork = 1
+#else
+        lwork = 1
+        allocate (work(lwork))
+        lrwork= 3*s%norbitals - 2
+#endif
         allocate (rwork(lrwork))
 
 ! Procedure
@@ -185,6 +218,7 @@
         write (logfile,*)
         write (logfile,*) ' Call diagonalizer '
 
+#ifdef GAMMA
         call dsyev ('V', 'U', s%norbitals, Smatrix, s%norbitals, eigen,      &
      &               rwork, -1, info)
         ! first find optimal length of rwork
@@ -193,6 +227,17 @@
         allocate(rwork(lrwork))
         call dsyev ('V', 'U', s%norbitals, Smatrix, s%norbitals, eigen,      &
      &               rwork, lrwork, info)
+
+#else
+        call zheev ('V', 'U', s%norbitals, Smatrix, s%norbitals, eigen, work,  &
+     &              -1, rwork , info)
+        !first find optimal length of work
+        lwork = work(1)
+        deallocate (work)
+        allocate (work (lwork))
+        call zheev ('V', 'U', s%norbitals, Smatrix, s%norbitals, eigen, work,  &
+     &              lwork, rwork , info)
+#endif
 
 ! NOTE: After calling dsyev, Smatrix now becomes the eigenvectors of the
 ! diagonalized Smatrix!
@@ -233,7 +278,7 @@
             write (logfile,*) ' WARNING. ### ### ### '
             write (logfile,*) ' Linear dependence encountered in eigenvectors. '
             write (logfile,*) ' Eigenvalue is very small. '
-            write (logfile,*) s%norbitals - s%norbitals_new, ' vectors removed.'
+            write (logfile,*) s%norbitals - s%norbitals_new, ' vectors removed. '
             do imu = mineig, s%norbitals
               jmu = imu - mineig + 1
               Smatrix(:,jmu) = Smatrix(:,imu)
@@ -244,7 +289,12 @@
 ! Deallocate Arrays
 ! ===========================================================================
         deallocate (rwork)
-
+#ifdef GAMMA
+        !No more deallocations
+#else
+        deallocate (work)
+#endif
+! None
 ! Format Statements
 ! ===========================================================================
 ! None
@@ -282,6 +332,8 @@
         subroutine diagonalize_H_Lowdin (s, iscf_iteration, ikpoint)
         implicit none
 
+        include '../include/constants.h'
+
 ! Argument Declaration and Description
 ! ===========================================================================
         type(T_structure), target :: s            !< the structure to be used
@@ -299,10 +351,15 @@
         integer lrwork                 ! size of the working array
         integer imu                    ! counters over eigenstates
 
-        double precision a0, a1
         real sqlami        ! square root of overlap eigenvalues
 
+#ifdef GAMMA
         double precision, allocatable :: rwork (:)        ! working vector
+        double precision a0r, a1r
+#else
+        integer lwork
+        double complex, allocatable :: work(:)
+#endif
 
         ! checks to see if structure has changed
         type(T_structure), pointer, save :: current
@@ -311,7 +368,13 @@
 
 ! Allocate Arrays
 ! ===========================================================================
+#ifdef GAMMA
         lrwork = 1
+#else
+        lwork = 1
+        allocate (work(lwork))
+        lrwork = 3*s%norbitals - 2
+#endif
         allocate (rwork(lrwork))
 
 ! Procedure
@@ -329,8 +392,8 @@
         end if
 
 ! Initialize some constants
-        a0 = 0.0d0
-        a1 = 1.0d0
+        a0r = 0.0d0
+        a1r = 1.0d0
         s%norbitals_new = size(eigen,1)
 
 ! ****************************************************************************
@@ -350,11 +413,18 @@
             sqlami = eigen(imu)**(-0.25d0)
             Smatrix(:,imu) = Smatrix(:,imu)*sqlami
           end do
-          call dgemm ('N', 'C', s%norbitals, s%norbitals, s%norbitals_new,  &
-     &                a1, Smatrix, s%norbitals, Smatrix, s%norbitals, a0,   &
+#ifdef GAMMA 
+         call dgemm ('N', 'C', s%norbitals, s%norbitals, s%norbitals_new,  &
+     &                a1r, Smatrix, s%norbitals, Smatrix, s%norbitals, a0r,   &
      &                S12matrix, s%norbitals)
+#else
+          call zgemm ('N', 'C', s%norbitals, s%norbitals, s%norbitals_new,   &
+     &                 a1, Smatrix, s%norbitals, Smatrix, s%norbitals, a0,   &
+     &                 S12matrix, s%norbitals)
+#endif
         end if
 
+! NOTE: S12matrix here NOW contains the matrix S^-1/2
 
 ! CALCULATE (S^-1/2)*H*(S^-1/2)
 ! ****************************************************************************
@@ -364,14 +434,26 @@
 ! Set M=H*(S^-.5)
 ! We do not need Smatrix any more at this point, so use it as a dummy
         Smatrix = 0.0d0
-        call dsymm ('R', 'U', s%norbitals, s%norbitals, a1, S12matrix,       &
-     &               s%norbitals, Hmatrix, s%norbitals, a0, Smatrix,         &
+
+#ifdef GAMMA
+        call dsymm ('R', 'U', s%norbitals, s%norbitals, a1r, S12matrix,       &
+     &               s%norbitals, Hmatrix, s%norbitals, a0r, Smatrix,         &
      &               s%norbitals)
 
 ! Set Z=(S^-.5)*M
-        call dsymm ('L', 'U', s%norbitals, s%norbitals, a1, S12matrix,       &
+        call dsymm ('L', 'U', s%norbitals, s%norbitals, a1r, S12matrix,       &
+     &               s%norbitals, Smatrix, s%norbitals, a0r, Hmatrix,         &
+     &               s%norbitals)
+#else
+        call zhemm ( 'R', 'U', s%norbitals, s%norbitals, a1, S12matrix,      &
+     &               s%norbitals, Hmatrix, s%norbitals, a0, Smatrix,         &
+     &               s%norbitals )
+
+! Set Z=(S^-.5)*M
+        call zhemm ( 'L', 'U', s%norbitals, s%norbitals, a1, S12matrix,      &
      &               s%norbitals, Smatrix, s%norbitals, a0, Hmatrix,         &
      &               s%norbitals)
+#endif
 
         if (iwriteout_dos .eq. 1) then
           slogfile = s%basisfile(:len(trim(s%basisfile))-4)
@@ -384,23 +466,42 @@
 ! Now, DIAGONALIZE THE HAMILTONIAN in the orthogonal basis set
 ! ****************************************************************************
 ! Eigenvectors are needed to calculate the charges and for forces!
+
+#ifdef GAMMA
         call dsyev ('V', 'U', s%norbitals, Hmatrix, s%norbitals, eigen,      &
      &               rwork, -1, info)
-        !first find optimal length of rwork
+        ! first find optimal length of rwork
         lrwork = rwork(1)
         deallocate (rwork)
         allocate (rwork(lrwork))
         call dsyev ('V', 'U', s%norbitals, Hmatrix, s%norbitals, eigen,      &
      &               rwork, lrwork, info)
+#else
+        call zheev ('V', 'U', s%norbitals, Hmatrix, s%norbitals, eigen,      &
+     &              work, -1, rwork , info)
+        ! first find optimal length of work
+        lwork = work(1)
+        deallocate (work)
+        allocate (work (lwork))
+        call zheev ('V', 'U', s%norbitals, Hmatrix, s%norbitals, eigen,      &
+     &              work, lwork, rwork , info)
+#endif
 
 ! INFORMATION FOR THE LOWDIN CHARGES
 ! ****************************************************************************
 ! S12matrix = S^-1/2 in AO basis
 ! We do not need Smatrix any more at this point, so use it as a dummy
         Smatrix = 0.0d0
-        call dsymm ('L', 'U', s%norbitals, s%norbitals, a1, S12matrix,       &
+
+#ifdef GAMMA
+        call dsymm ('L', 'U', s%norbitals, s%norbitals, a1r, S12matrix,       &
+     &               s%norbitals, Hmatrix, s%norbitals, a0r, Smatrix,         &
+     &               s%norbitals)
+#else
+        call zhemm ('L', 'U', s%norbitals, s%norbitals, a1, S12matrix,       &
      &               s%norbitals, Hmatrix, s%norbitals, a0, Smatrix,         &
      &               s%norbitals)
+#endif
 
 ! NOTE: After multiplication Smatrix = S^-1/2 * yy
 ! We did a symmetric orthogonalization followed by a diagonalization
@@ -412,14 +513,24 @@
 ! which are the eigenvectors of the transformed H matrix and Smatrix which
 ! is at this point the eigenstates of the untransformed H matrix (or the
 ! eigenstates in the atomic orbital basis).
+#ifdef GAMMA
         do imu = 1, s%norbitals_new
           s%kpoints(ikpoint)%c_Lowdin(:,imu) = Hmatrix(:,imu)
           s%kpoints(ikpoint)%c(:,imu) = Smatrix(:,imu)
         end do
+#else
+        s%kpoints(ikpoint)%c_Lowdin = Hmatrix
+        s%kpoints(ikpoint)%c = Smatrix
+#endif
 
 ! Deallocate Arrays
 ! ===========================================================================
         deallocate (rwork)
+#ifdef GAMMA
+        ! No more deallocations
+#else
+        deallocate (work)
+#endif
 
 ! Format Statements
 ! ===========================================================================
@@ -452,12 +563,16 @@
         function phase (dot)
         implicit none
 
+#ifdef GAMMA
         real phase
+#else
+        complex phase
+#endif
 
 ! Argument Declaration and Description
 ! ===========================================================================
 ! Input
-        real, intent (in) :: dot    !> the dot product of k*r
+        real, intent(in) :: dot    !> the dot product of k*r
 
 ! Local Parameters and Data Declaration
 ! ===========================================================================
@@ -469,8 +584,12 @@
 
 ! Procedure
 ! ===========================================================================
+#ifdef GAMMA
         phase = 1.0d0
         if(.FALSE.) phase=dot
+#else
+        phase = cmplx(cos(dot),sin(dot))
+#endif
 
 ! Format Statements
 ! ===========================================================================
@@ -480,7 +599,6 @@
 ! ===========================================================================
         return
         end function phase
-
 
 ! End the module
 ! ===========================================================================

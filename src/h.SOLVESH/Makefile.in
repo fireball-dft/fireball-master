@@ -1,9 +1,9 @@
 # *********************** GAMMA, KPOINTS, MDET, or KS ********************
 ifneq (,$(findstring KPOINTS, ${METHOD}))
-SOLVESH = M_diagonalization_Lowdin_kpoints.o M_kspace_Lowdin.o M_density_matrix.o
+SOLVESH = M_diagonalization_Lowdin.o M_kspace_Lowdin.o M_density_matrix.o
 endif
 ifneq (,$(findstring MDET, ${METHOD}))
-SOLVESH = M_diagonalization_Lowdin_gamma.o M_kspace_Lowdin.o M_density_matrix_MDET.o
+SOLVESH = M_diagonalization_Lowdin.o M_kspace_Lowdin.o M_density_matrix_MDET.o
 endif
 ifneq (,$(findstring KS, ${METHOD}))
 SOLVESH = M_diagonalization_kpoints.o M_kspace.o
@@ -20,4 +20,7 @@ libthd_SOLVESH.a: $(SOLVESH)
 	ar rcs $@ $^ && mv $@ ../libs && cp *.mod ../include
 
 %.o: %.f90
-	${F90} ${FFLAGS} -c $< -I../include
+	${F90} ${DEFS} ${FFLAGS} -c $< -I../include
+
+%.o: %.F90
+	${F90} ${DEFS} -I.. -I../.. ${FFLAGS} -c $< -I../include

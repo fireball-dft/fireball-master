@@ -9,6 +9,9 @@
 /* THEORY=DOGS enabled */
 #undef DOGS
 
+/* METHOD=GAMMA enabled */
+#undef GAMMA
+
 /* Define to 1 if you have the `sqrt' function. */
 #undef HAVE_SQRT
 

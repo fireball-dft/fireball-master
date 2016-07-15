@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2013
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -29,22 +29,24 @@
 ! M_Fdata_2c
 ! Module Description
 ! ===========================================================================
-!       This is a module containing all of the subroutines that will read in
-! all the two-center fdata from the fdata files in the Fdata directory.  It
-! contains the following subroutines within the module:
-!
-!       read_Fdata_2c.f90 - reads in the two-center datafiles.
-!       getMEs_Fdata_2c.f90 - interpolates the two-center data and gets the
-!                             matrix elements.
-!       destroy_Fdata_2c.f90 - deallocates all the two-center fdata arrays.
-!
-! For a complete list of the interactions see the files 2c.Z1.Z2.dir now
-! located in the Fdata directory.  This list will change depending on
-! the datafiles included there. This list is an output from running create.x
+!>       This is a module containing all of the subroutines that will read in
+!! all the two-center fdata from the fdata files in the Fdata directory.  It
+!! contains the following subroutines within the module:
+!!
+!!       read_Fdata_2c.f90 - reads in the two-center datafiles.
+!!       getMEs_Fdata_2c.f90 - interpolates the two-center data and gets the
+!!                             matrix elements.
+!!       getDMEs_Fdata_2c.f90 - interpolates the two-center derivatives and
+!!                              gets derivative matrix elements
+!!       destroy_Fdata_2c.f90 - deallocates all the two-center fdata arrays.
+!!
+!! For a complete list of the interactions see the files 2c.Z1.Z2.dir now
+!! located in the Fdata directory.  This list will change depending on
+!! the datafiles included there. This list is an output from running create.x
 ! ===========================================================================
 ! Code written by:
-! Ning Ma
-! James P. Lewis
+!> @author Ning Ma
+!! @author James P. Lewis
 ! Box 6315, 209 Hodges Hall
 ! Department of Physics
 ! West Virginia University
@@ -176,13 +178,13 @@
 
 ! Procedure
 ! ===========================================================================
-        write (ilogfile, *) ' Reading Two-center interactions '
-        write (ilogfile, *) ' ------------------------------- '
+        write (ilogfile, '(A)') 'Reading Two-center interactions '
+        write (ilogfile, '(A)') '------------------------------- '
         write (ilogfile, *)
 
         do ispecies = 1, nspecies
           do jspecies = 1, nspecies
-            write (ilogfile,'(2x, A15, I3, I3)') ' species pair: ', species(ispecies)%nZ, species(jspecies)%nZ
+            write (ilogfile,'(4x, A15, I4, I4)') '- species pair: ', species(ispecies)%nZ, species(jspecies)%nZ
             ! cut some lengthy notation
             pFdata_bundle=>Fdata_bundle_2c(ispecies, jspecies)
 
@@ -218,7 +220,7 @@
               pFdata_cell%dx = pFdata_cell%xmax/(pFdata_cell%nx - 1)
 
               ! open the actual datafile
-              open (unit = 13,                                              &
+              open (unit = 13,                                               &
      &              file = trim(Fdata_location)//'/'//trim(filename),        &
      &              status = 'old')
 
@@ -229,10 +231,10 @@
               close (13)
 
               ! open mu, nu, mvalue file
-              write (filename,'("/", i2.2, "_munu_2c.", i2.2, ".", i2.2,    &
-     &                           ".dat")')                                   &
+              write (filename,'("/", i2.2, "_munu_2c.", i2.2, ".", i2.2,     &
+     &                          ".dat")')                                    &
      &          itype, species(ispecies)%nZ, species(jspecies)%nZ
-              open (unit = 14, file = trim(Fdata_location)//trim(filename), &
+              open (unit = 14, file = trim(Fdata_location)//trim(filename),  &
      &          status = 'old')
 
               ! read the mapping - stored in mu, nu, and mvalue
@@ -246,12 +248,12 @@
 
 ! Get the Kleinman-Bylander coefficients
           write (filename,'("/clPP.",i2.2,".dat")') species(ispecies)%nZ
-          open (unit = 15,                                                 &
+          open (unit = 14,                                                 &
      &      file = trim(Fdata_location)//'/'//trim(filename), status = 'old')
           do issh = 1, species(ispecies)%nssh_PP
-            read (15,*) species(ispecies)%shell_PP(issh)%cl
+            read (14,*) species(ispecies)%shell_PP(issh)%cl
           end do
-          close (15)
+          close(14)
         end do
 
 ! Deallocate Arrays
@@ -268,6 +270,7 @@
         end subroutine read_Fdata_2c
 
 
+! ===========================================================================
 ! getMEs_Fdata_2c
 ! ===========================================================================
 ! Subroutine Description
@@ -294,7 +297,7 @@
 !
 ! Subroutine Declaration
 ! ===========================================================================
-        subroutine getMEs_Fdata_2c (ispecies, jspecies, iint, isub, x,       &
+        subroutine getMEs_Fdata_2c (ispecies, jspecies, iint, isub, x,     &
      &                              norb_mu, norb_nu, hmbox)
         implicit none
 
@@ -353,7 +356,6 @@
             inu = pFdata_cell%nu_2c(iindex)
             hmbox(imu,inu) = pFdata_cell%Fdata_2c(1,iindex)
           end do
-          return
         end if
 
 ! now find starting and ending points for the interpolation
@@ -407,6 +409,190 @@
 ! ===========================================================================
         return
         end subroutine getMEs_Fdata_2c
+
+
+! ===========================================================================
+! getDMEs_Fdata_2c
+! ===========================================================================
+! Subroutine Description
+! ===========================================================================
+!>       This routine uses interpolation to find the value of f(x) for any x,
+!! given an array of equally spaced points for f(x).  The function f(x) is a
+!! two-center interaction function read from read_Fdata_2c. After the data
+!! is interpolated, the data is 'recovered' into the matrix form.
+!!
+!! For polynomial interpolation see Mathews and Walker, p.329
+
+! ===========================================================================
+! Code written by:
+!> @author Barry Haycock
+!! @author Ning Ma
+!! @author James P. Lewis
+! Box 6315, 209 Hodges Hall
+! Department of Physics
+! West Virginia University
+! Morgantown, WV 26506-6315
+!
+! (304) 293-3422 x1409 (office)
+! (304) 293-5732 (FAX)
+! ===========================================================================
+!
+! Subroutine Declaration
+! ===========================================================================
+        subroutine getDMEs_Fdata_2c (ispecies, jspecies, iint, isub, x,       &
+     &                               norb_mu, norb_nu, hmbox, Dhmbox)
+        implicit none
+
+! Argument Declaration and Description
+! ===========================================================================
+! Input
+        integer, intent(in) :: ispecies, jspecies    !< species
+        integer, intent(in) :: iint, isub            !< integral type, subtype
+        integer, intent(in) :: norb_mu, norb_nu      !< Index max orbital for mu and nu atoms
+
+        real, intent(in) :: x                        !< distance between pair
+
+! Output
+        ! Fdata indexed for mu and nu
+        real, intent(out), dimension (norb_mu, norb_nu) :: hmbox
+
+        ! Derivative of Fdata indexed for mu and nu
+        real, intent(out), dimension (norb_mu, norb_nu) :: Dhmbox
+
+! Local Parameters and Data Declaration
+! ===========================================================================
+!> @param P_tolerance (may be needed to avoid roundoff error in the calling
+!! program) if xin > xmax but within, say, .001% of xmax then ignore
+        real, parameter :: P_tolerance = 1.0d-5
+
+! Variable Declaration and Description
+! ===========================================================================
+        integer iindex, imu, inu               !< counters for building matrix
+        integer ipoint, ileft, imid, iright    !< points along the grid
+        integer iprod, isum                    !< product, sum points on grid
+
+        real pden, prod                        !< stuff for products
+
+        real, dimension (:), allocatable :: Fdata     !< F(x)
+        real, dimension (:), allocatable :: dFdatadx  !< dF(x)
+        real, dimension (0:6) :: xx, pdenom
+
+        type(T_Fdata_cell_2c), pointer :: pFdata_cell
+        type(T_Fdata_bundle_2c), pointer :: pFdata_bundle
+
+		integer kpoint, jpoint
+		real xsumoverj, xprod
+
+! Procedure
+! ===========================================================================
+        pFdata_bundle => Fdata_bundle_2c(ispecies,jspecies)
+        pFdata_cell =>                                                       &
+      &   pFdata_bundle%Fdata_cell_2c(pFdata_bundle%index_2c(iint,isub))
+        allocate (dFdatadx(pFdata_cell%nME))
+        allocate (Fdata(pFdata_cell%nME))
+		dFdatadx = 0.0d0
+		Fdata = 0.0d0
+		xx = 0.00
+		pdenom = 0.00
+
+! The following should never happen.  Delete them might improve performance
+        if (x .lt. 0.0d0) then
+          stop ' Error in getDMEs_Fdata_2c: negative x! '
+        else if (x .gt. pFdata_cell%xmax*(1.0d0 + P_tolerance)) then
+          write (*,*) ' interaction, subtype = ', iint, isub
+          write (*,*) ' ispecies, jspecies = ', ispecies, jspecies
+          write (*,*) ' x = ', x, ' xmax = ', pFdata_cell%xmax
+          stop ' Error in getDMEs_Fdata_2C: x too large! '
+        else if (x .lt. P_tolerance) then
+          ! Now, construct the matrix
+          hmbox = 0.0d0
+          do iindex = 1, pFdata_cell%nME
+            imu = pFdata_cell%mu_2c(iindex)
+            inu = pFdata_cell%nu_2c(iindex)
+            hmbox(imu,inu) = pFdata_cell%Fdata_2c(1,iindex)
+            Dhmbox(imu,inu) = 0.0d0
+          end do          
+          return
+        end if
+
+! now find starting and ending points for the interpolation
+! note : imid is the point to the left (code assumes this)
+        imid = int(x/pFdata_cell%dx) + 1
+        ileft = imid - 3
+        iright = imid + 3
+        if (ileft .lt. 1) then
+          ileft = 1
+          iright = 7
+        else if (iright .gt. pFdata_cell%nx) then
+          ileft = pFdata_cell%nx - 6
+          iright = pFdata_cell%nx
+        end if
+
+! Find derivatives
+        do ipoint = ileft, iright
+          xx(ipoint - ileft) = (ipoint - 1)*pFdata_cell%dx
+        end do
+
+        do isum = ileft, iright
+          prod = 1.0d0
+          pdenom(isum - ileft) = 1.0d0
+          do iprod = ileft, iright
+            if (iprod .ne. isum) then
+              pden = 1.0d0/(xx(isum - ileft) - xx(iprod - ileft))
+              pdenom(isum - ileft) = pdenom(isum - ileft)*pden
+              prod = prod*(x - xx(iprod - ileft))*pden
+            end if
+          end do
+          Fdata = Fdata + pFdata_cell%Fdata_2c(isum,:)*prod
+        end do
+
+        ! Now, construct the matrix
+        hmbox = 0.0d0
+        do iindex = 1, pFdata_cell%nME
+          imu = pFdata_cell%mu_2c(iindex)
+          inu = pFdata_cell%nu_2c(iindex)
+          hmbox(imu,inu) = Fdata(iindex)
+        end do
+
+        dFdatadx = 0.0d0
+        do ipoint = ileft, iright
+          xsumoverj = 0.0d0
+          do jpoint = ileft, iright
+            if (ipoint .eq. jpoint) cycle
+            xprod = 1.0d0
+            do kpoint = ileft, iright
+              if (kpoint .eq. jpoint) cycle
+              if (kpoint .eq. ipoint) cycle
+              xprod = xprod * (x - xx(kpoint - ileft))
+            end do ! kpoint
+            xsumoverj = xsumoverj + xprod
+          end do ! jpoint
+
+          dFdatadx = dFdatadx + pFdata_cell%Fdata_2c(ipoint,:)               &
+     &                           *pdenom(ipoint - ileft)*xsumoverj
+        end do ! ipoint
+
+! Now, construct the matrix
+        Dhmbox = 0.0d0
+        do iindex = 1, pFdata_cell%nME
+          imu = pFdata_cell%mu_2c(iindex)
+          inu = pFdata_cell%nu_2c(iindex)
+          Dhmbox(imu,inu) = dFdatadx(iindex)
+        end do
+
+! Deallocate Arrays
+! ===========================================================================
+		deallocate (dFdatadx)
+		deallocate (Fdata)
+
+! Format Statements
+! ===========================================================================
+! None
+
+! End Subroutine
+! ===========================================================================
+        return
+        end subroutine getDMEs_Fdata_2c
 
 
 ! ===========================================================================
@@ -476,7 +662,7 @@
         return
         end subroutine destroy_Fdata_2c
 
-
 ! End Module
 ! ===========================================================================
         end module M_Fdata_2c
+
