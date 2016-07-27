@@ -147,7 +147,7 @@
         integer norb_mu, norb_nu         !< size of the block for the pair
 
         real distance_13, distance_23    !< distance from 3rd atom
-!        real dQ                          !< net charge on atom
+!       real dQ                          !< net charge on atom
 
         !< for smoothing
         real rcutoff1_min, rcutoff2_min, rcutoff3_min, rend1, rend2
@@ -206,10 +206,9 @@
         real, dimension (:, :, :), allocatable :: f3naXc
 
         ! temporary storage
-!        real, dimension (:, :, :), allocatable :: f3naXat
-!        real, dimension (:, :, :), allocatable :: f3naXbt
-!        real, dimension (:, :, :), allocatable :: f3naXct
-
+!       real, dimension (:, :, :), allocatable :: f3naXat
+!       real, dimension (:, :, :), allocatable :: f3naXbt
+!       real, dimension (:, :, :), allocatable :: f3naXct
 
         real, dimension (:, :, :), allocatable :: DemnplA
         real, dimension (:, :, :), allocatable :: DemnplB
@@ -330,6 +329,10 @@
               end if
               cost = dot_product(sighat, rhat)
               call epsilon_function (rhat, sighat, eps)
+
+! dera3 = depsA = deps/dratm in the 3-center system
+! der13 = depsB = deps/dr1 in the 3-center system
+              call Depsilon_3c (r1, r2, r21, z, rna, rhat, eps, depsA, depsB)
 
 ! Find the unit vector in rna-r1 direction.
               if (distance_13 .gt. 1.0d-05) then
@@ -603,11 +606,11 @@
                 do inu = 1, norb_nu
                   do imu = 1, norb_mu
                     pfalpha%f3naa = pfalpha%f3naa                            &
-      &               + pRho_neighbors%block(imu,inu)*f3naXa(:,imu,inu)
+      &               - pRho_neighbors%block(imu,inu)*f3naXa(:,imu,inu)
                     pfi%f3nab = pfi%f3nab                                    &
-      &               + pRho_neighbors%block(imu,inu)*f3naXb(:,imu,inu)
+      &               - pRho_neighbors%block(imu,inu)*f3naXb(:,imu,inu)
                     pfj%f3nac = pfj%f3nac                                    &
-      &               + pRho_neighbors%block(imu,inu)*f3naXc(:,imu,inu)
+      &               - pRho_neighbors%block(imu,inu)*f3naXc(:,imu,inu)
 
 !                    pvna_neighbors%Dblocka(:,imu,inu) =                            &
 !     &                pvna_neighbors%Dblocka(:,imu,inu)                            &

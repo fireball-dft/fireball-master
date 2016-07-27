@@ -797,7 +797,6 @@
 ! ===========================================================================
         integer iatom                             !< counter over atoms
         integer ineigh 
-        integer mneigh                           !< counter over neighbors
 
 ! Procedure
 ! ===========================================================================

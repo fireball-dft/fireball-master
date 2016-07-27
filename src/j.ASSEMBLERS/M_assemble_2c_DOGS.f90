@@ -584,30 +584,30 @@
 ! blocks.  We calculate the atom cases in a separate loop.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          pvna=>s%vna(iatom)
-
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
-          allocate (pvna%neighbors(num_neigh))
+
+          ! cut some lengthy notation
+          pvna=>s%vna(iatom)
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
+          allocate (pvna%neighbors(num_neigh))
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pvna_neighbors=>pvna%neighbors(ineigh)
-
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
 
+            ! cut some more lengthy notation
+            pvna_neighbors=>pvna%neighbors(ineigh)
+
 ! Allocate block size
             norb_nu = species(in2)%norb_max
             allocate (pvna_neighbors%block(norb_mu, norb_nu))
-            pvna_neighbors%block = 0.0d0
             allocate (pvna_neighbors%blocko(norb_mu, norb_nu))
+            pvna_neighbors%block = 0.0d0
             pvna_neighbors%blocko = 0.0d0
 
 ! SET-UP STUFF
@@ -657,6 +657,8 @@
               do isorp = 1, species(in1)%nssh
                 dQ = s%atom(iatom)%shell(isorp)%dQ
 
+! Reinitialize
+                bcnam = 0.0d0; bcnax = 0.0d0
                 call getMEs_Fdata_2c (in1, in2, interaction, isorp, z,       &
      &                                norb_mu, norb_nu, bcnam)
                 call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
@@ -700,22 +702,18 @@
 ! First, do vna_atom case. Here we compute <i | v(j) | i> matrix elements.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          pvna=>s%vna(iatom)
-          poverlap=>s%overlap(iatom)
-
-          matom = s%neigh_self(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
+          matom = s%neigh_self(iatom)
+
+          ! cut some lengthy notation
+          pvna=>s%vna(iatom); pvna_neighbors=>pvna%neighbors(matom)
+          poverlap=>s%overlap(iatom); pS_neighbors=>poverlap%neighbors(matom)
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pvna_neighbors=>pvna%neighbors(matom)
-            pS_neighbors=>poverlap%neighbors(matom)
-
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a

@@ -167,21 +167,16 @@
 
 ! Local Variable Declaration and Description
 ! ===========================================================================
-        integer iatom, ineigh, matom, ialpha  !< counter over atoms/neighbors
-        integer in1, in2, in3        !< species number
+        integer iatom, ineigh, matom !< counter over atoms/neighbors
+        integer in1, in2             !< species number
         integer jatom, num_neigh     !< counters over neighbors
         integer mbeta                !< the cell containing neighbor of iatom
         integer norb_mu, norb_nu     !< size of the (mu, nu) block for pair
         integer ix                   !< counter over dimensions
         integer imu, inu             !< counter over MEs
-        integer mneigh
-        integer ibeta, jbeta
 
         real sumT
 
-        real, dimension (3) :: r1, r2, r3 !< position of atoms
-
-        type(T_forces), pointer :: pfalpha
         type(T_forces), pointer :: pfi
         type(T_forces), pointer :: pfj
 
@@ -239,7 +234,6 @@
 
 ! allocate force terms and initialize to zero
           allocate (pfi%vna_atom (3, num_neigh)); pfi%vna_atom = 0.0d0
-!         allocate (pfi%vna_ontop (3, num_neigh)); pfi%vna_ontop = 0.0d0
           allocate (pfi%vxc_off_site (3, num_neigh)); pfi%vxc_off_site = 0.0d0
           allocate (pfi%vxc_on_site (3, num_neigh)); pfi%vxc_on_site = 0.0d0
           allocate (pfi%ewaldsr (3, num_neigh)); pfi%ewaldsr = 0.0d0
@@ -316,43 +310,6 @@
           end do ! end loop over neighbors
 
 
-! ASSEMBLE HARTREE (TWO-CENTER) FORCES - ONTOP CASE
-! ***************************************************************************
-! Now loop over all neighbors ineigh of iatom.
-!         do ineigh = 1, num_neigh
-!           mbeta = s%neighbors(iatom)%neigh_b(ineigh)
-!           jatom = s%neighbors(iatom)%neigh_j(ineigh)
-!           in2 = s%atom(jatom)%imass
-!           norb_nu = species(in2)%norb_max
-
-            ! cut some lengthy notation
-!           pfj=>s%forces(jatom)
-
-            ! density matrix - neighbors
-!           pRho_neighbors=>pdenmat%neighbors(ineigh)
-
-            ! cut some lengthy notation for vna
-!           pvna_neighbors=>pvna%neighbors(ineigh)
-
-! If r1 .ne. r2, then this is a case where the potential is located at one of
-! the sites of a wavefunction (ontop case).
-!           if (iatom .eq. jatom .and. mbeta .eq. 0) then
-
-! Do nothing here - special case. Interaction already calculated in atm case.
-
-!           else
-
-! Notice the explicit negative sign, this makes it force like.
-!             do inu = 1, norb_nu
-!               do imu = 1, norb_mu
-!                 pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)          &
-!     &            - pRho_neighbors%block(imu,inu)*pvna_neighbors%Dblocko(:,imu,inu)
-!               end do
-!             end do
-!           end if
-!         end do ! end loop over neighbors
-
-
 ! ASSEMBLE EXCHANGE-CORRELATION (TWO-CENTER) FORCE - ON-SITE CASE
 ! ***************************************************************************
 ! The vxc two-center forces are: vxc_on_site and vxc_off_site.
@@ -365,10 +322,10 @@
 
 ! Now loop over all neighbors ineigh of iatom.
           pvxc_neighbors=>pvxc%neighbors(matom)
-          do ineigh = 1, num_neigh
+          do ineigh = 1, num_neigh            
             do inu = 1, norb_mu
               do imu = 1, norb_mu
-                pfi%vxc_on_site(:,ineigh) = pfi%vxc_on_site(:,ineigh)        &
+                pfi%vxc_on_site(:,ineigh) = pfi%vxc_on_site(:,ineigh)        &     
      &           - pRho_neighbors_matom%block(imu,inu)*pvxc_neighbors%Dblocko(:,imu,inu)
               end do
             end do
@@ -596,11 +553,11 @@
 
 ! vna three-center contribution to the total force
 ! ****************************************************************************
-          pfi%ftot = pfi%ftot + pfi%f3naa + pfi%f3nab + pfi%f3nac
+          pfi%ftot = pfi%ftot - pfi%f3naa - pfi%f3nab - pfi%f3nac
 
 ! vxc three-center contribution to the total force
 ! ****************************************************************************
-          pfi%ftot = pfi%ftot + pfi%f3xca + pfi%f3xcb + pfi%f3xcc
+          pfi%ftot = pfi%ftot - pfi%f3xca - pfi%f3xcb - pfi%f3xcc
         end do ! end loop over atoms
 ! ***************************************************************************
 !                                   E N D

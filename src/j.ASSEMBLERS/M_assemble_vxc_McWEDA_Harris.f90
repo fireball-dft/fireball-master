@@ -420,10 +420,10 @@
               call lda_ceperley_alder (prho_in_shell, exc_in, muxc_in,       &
      &                                 dexc_in, d2exc_in, dmuxc_in, d2muxc_in)
                   
-            prho_bond_shell =                                            &
+            prho_bond_shell =                                                &
      &        s%rho_bond_weighted(iatom)%neighbors(matom)%block(issh,issh)
-              call lda_ceperley_alder (prho_bond_shell, exc_bond,          &
-     &                                     muxc_bond, dexc_bond, d2exc_bond,   &
+              call lda_ceperley_alder (prho_bond_shell, exc_bond,            &
+     &                                     muxc_bond, dexc_bond, d2exc_bond, &
      &                                     dmuxc_bond, d2muxc_bond)
 
 ! Calculate vxc_SN and vxc_SN_bond for (mu,nu)-block
@@ -433,10 +433,10 @@
               prho_in = s%rho_in(iatom)%neighbors(matom)%block(imu,imu)
               prho_bond = s%rho_bond(iatom)%neighbors(matom)%block(imu,imu)
 ! calculate GSN for rho_in
-              pvxc_SN_neighbors%block(imu,imu) = muxc_in                   &
+              pvxc_SN_neighbors%block(imu,imu) = muxc_in                     &
      &          + dmuxc_in*(prho_in - prho_in_shell)
               
-              pvxc_SN_bond_neighbors%block(imu,imu) = muxc_bond                   &
+              pvxc_SN_bond_neighbors%block(imu,imu) = muxc_bond              &
      &          + dmuxc_bond*(prho_bond - prho_bond_shell)
             end do
 
@@ -454,10 +454,10 @@
               call lda_ceperley_alder (prho_in_shell, exc_in, muxc_in,       &
      &                                 dexc_in, d2exc_in, dmuxc_in, d2muxc_in)
      
-              prho_bond_shell =                                            &
+              prho_bond_shell =                                              &
      &              s%rho_bond_weighted(iatom)%neighbors(matom)%block(issh,jssh)
-              call lda_ceperley_alder (prho_bond_shell, exc_bond,          &
-     &                                     muxc_bond, dexc_bond, d2exc_bond,   &
+              call lda_ceperley_alder (prho_bond_shell, exc_bond,            &
+     &                                     muxc_bond, dexc_bond, d2exc_bond, &
      &                                     dmuxc_bond, d2muxc_bond)
 
 ! Calculate vxc_SN and vxc_SN_bond for (mu,nu)-block

@@ -114,17 +114,20 @@
         integer issh, jssh               !< counter over shells
         integer norb_mu, norb_nu         !< size of the block for the pair
         integer imu, inu
+        integer n1, n2, l1, l2, m1, m2     !< quantum numbers n, l, and m
         real dexc_in                       !< 1st derivative of xc
         real d2exc_in                      !< 2nd derivativive of xc
         real dmuxc_in                      !< 1st derivative of xc
         real exc_in                        !< xc energy
         real muxc_in                       !< xc potential_
         real d2muxc_in                     !< 2nd derivative of xc
-
+        
+        real vxc_mag                     !< magnitud like term
         real Qneutral                    !< charge
         real z                           !< distances between r1 and r2
         real x, cost                     !< dnabc and angle
         real rho_aver
+
         real, dimension (3, 3) :: eps     !< the epsilon matrix
         real, dimension (3, 3, 3) :: deps !< derivative of epsilon matrix
         real, dimension (3) :: r1, r2, r3, r12, r21   !< positions
@@ -132,6 +135,10 @@
         real, dimension (3) :: rhat       !< unit vector along bc - r3
         real, dimension (3) :: amt
         real, dimension (3) :: bmt
+        
+        real, dimension (3) :: rhop_a
+        real, dimension (3) :: rhop_b
+        real, dimension (3) :: rhop_c
         
         real, dimension (3, 3, 3) :: depsA  !< the Depsilon matrix for the bond-charge
         real, dimension (3, 3, 3) :: depsB  !< the Depsilon matrix for the potential
@@ -146,7 +153,7 @@
         real, dimension (:, :), allocatable :: dpbcxcm
         real, dimension (:, :), allocatable :: dxbcxcm
         real, dimension (:, :), allocatable :: dybcxcm
-        
+
         real, dimension (:, :, :), allocatable :: vdxcMa
         real, dimension (:, :, :), allocatable :: vdxcMb
         real, dimension (:, :, :), allocatable :: vdxcXa
@@ -162,6 +169,10 @@
         real, dimension (:, :), allocatable :: dpbcxcm_weig
         real, dimension (:, :), allocatable :: dxbcxcm_weig
         real, dimension (:, :), allocatable :: dybcxcm_weig
+        
+        real, dimension (:, :, :), allocatable :: mxca
+        real, dimension (:, : ,:), allocatable :: mxcb
+        real, dimension (:, :, :), allocatable :: mxcc
 
         real, dimension (:, :, :), allocatable :: vdxcMa_weig
         real, dimension (:, :, :), allocatable :: vdxcMb_weig
@@ -194,6 +205,9 @@
         end interface
         type(T_assemble_neighbors), pointer :: prho_in
         type(T_assemble_block), pointer :: prho_in_neighbors
+        
+        type(T_assemble_neighbors), pointer :: poverlap
+        type(T_assemble_block), pointer :: poverlap_neighbors        
 
         type(T_assemble_neighbors), pointer :: prhoS_in ! weighted over shells
         type(T_assemble_block), pointer :: prhoS_in_neighbors! weighted over shells
@@ -229,6 +243,7 @@
               nssh_j = species(in2)%nssh
 
               ! cut some lengthy notation
+              poverlap=>s%overlap(iatom); poverlap_neighbors=>poverlap%neighbors(mneigh)
               prho_in=>s%rho_in(iatom); prho_in_neighbors=>prho_in%neighbors(mneigh)
               
               prhoS_in=>s%rho_in_weighted(iatom)
@@ -237,7 +252,7 @@
               pfi=>s%forces(iatom); pfj=>s%forces(jatom)
 
               pdenmat=>s%denmat(iatom)
-              pRho_neighbors=>pdenmat%neighbors(mneigh) !rho_3c
+              pRho_neighbors=>pdenmat%neighbors(mneigh) ! rho_3c
 
 
 ! SET-UP STUFF
@@ -285,6 +300,10 @@
               allocate (dpbcxcm(norb_mu, norb_nu)); dpbcxcm = 0.0d0
               allocate (dxbcxcm(norb_mu, norb_nu)); dxbcxcm = 0.0d0
               allocate (dybcxcm(norb_mu, norb_nu)); dybcxcm = 0.0d0
+              
+              allocate (mxca(3, norb_mu, norb_nu)); mxca = 0.0d0
+              allocate (mxcb(3, norb_mu, norb_nu)); mxcb = 0.0d0
+              allocate (mxcc(3, norb_mu, norb_nu)); mxcc = 0.0d0
               
               ! vectorial representations
               allocate (vdxcMa(3, norb_mu, norb_nu)); vdxcMa = 0.0d0
@@ -426,59 +445,68 @@
               deallocate (vdxcMa_weig, vdxcMb_weig, vdxcMc_weig)
 
 
-
+              n1 = 0
               do issh = 1, species(in1)%nssh
+! n1 : counter used to determine orbitals imu
+                l1 = species(in1)%shell(issh)%lssh
+                n1 = n1 + l1 + 1
+                n2 = 0
                 do jssh = 1, species(in2)%nssh
-                  call lda_ceperley_alder (prhoS_in_neighbors%block(issh,jssh), exc_in, muxc_in,  &
+! n2 : counter used to determine orbitals inu
+                   l2 = species(in2)%shell(jssh)%lssh
+                   n2 = n2 + l2 + 1
+                   call lda_ceperley_alder (prhoS_in_neighbors%block(issh,jssh), exc_in, muxc_in,  &
      &                                   dexc_in, d2exc_in, dmuxc_in, d2muxc_in)
-                  pfalpha%f3xca = pfalpha%f3xca &
-             & -d2muxc_in*rhoma_weig(:,issh,jssh)*prhoS_in_neighbors%block(issh,jssh)**2
-                  pfi%f3xcb = pfi%f3xcb &
-             & -d2muxc_in*rhomb_weig(:,issh,jssh)*prhoS_in_neighbors%block(issh,jssh)**2
-                  pfj%f3xcc = pfj%f3xcc &
-             & -d2muxc_in*rhomc_weig(:,issh,jssh)*prhoS_in_neighbors%block(issh,jssh)**2
-                  do isubtype = 1, species(in3)%nssh
-                    pFdata_bundle => Fdata_bundle_3c(in1, in2, in3)
-                    pFdata_cell =>                                             &
-     &                pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(P_rho_3c,isubtype,1))
-                    rho_aver= 0.0d0
-                    do iindex = 1, pFdata_cell%nME
-                      imu = pFdata_cell%mu_3c(iindex)
-                      inu = pFdata_cell%nu_3c(iindex)
-
-!                      vxca(:,imu,inu) = d2muxc_in*rhoma_weig(:,issh,jssh)*prho_in_neighbors%block(issh,jssh) &
-!     &                     + dmuxc_in*rhoxa(:,imu,inu)
-
-!                      vxcb(:,imu,inu) = d2muxc_in*rhomb_weig(:,issh,jssh)*prho_in_neighbors%block(issh,jssh) &
-!     &                     + dmuxc_in*rhoxb(:,imu,inu)
-
-!                      vxcc(:,imu,inu) = d2muxc_in*rhomc_weig(:,issh,jssh)*prho_in_neighbors%block(issh,jssh) &
-!     &                     + dmuxc_in*rhoxc(:,imu,inu)
-
-        
                        
-                      pfalpha%f3xca = pfalpha%f3xca&
-             &             - pRho_neighbors%block(imu,inu)*dmuxc_in*rhoxa(:,imu,inu)
-                      pfi%f3xcb = pfi%f3xcb&
-             &             - pRho_neighbors%block(imu,inu)*dmuxc_in*rhoxb(:,imu,inu)
-                      pfj%f3xcc = pfj%f3xcc&
-             &             - pRho_neighbors%block(imu,inu)*dmuxc_in*rhoxc(:,imu,inu)
+                   rhop_a = rhoma_weig(:,issh,jssh)                    
+                   rhop_b = rhomb_weig(:,issh,jssh)                     
+                   rhop_c = rhomc_weig(:,issh,jssh)
 
-                      rho_aver= rho_aver + pRho_neighbors%block(imu,inu)
-                    end do !iindex = 1, pFdata_cell%nME
-                  end do ! isubtype = 1, species(in3)%nssh
-!                  pfalpha%f3xca = pfalpha%f3xca &
-!             & +d2muxc_in*rhoma_weig(:,issh,jssh)*prhoS_in_neighbors%block(issh,jssh)*rho_aver
-!                  pfi%f3xcb = pfi%f3xcb &
-!             & +d2muxc_in*rhomb_weig(:,issh,jssh)*prhoS_in_neighbors%block(issh,jssh)*rho_aver
-!                  pfj%f3xcc = pfj%f3xcc &
-!             & +d2muxc_in*rhomc_weig(:,issh,jssh)*prhoS_in_neighbors%block(issh,jssh)*rho_aver
+! loop over orbitals in the iatom-shell (imu)
+                   do m1 = -l1, l1
+                     imu = n1 + m1
+! loop over orbitals in the ineigh-shell (inu)
+                     do m2 = -l2, l2
+                       inu = n2 + m2
 
+                     
+                       mxca(:,imu,inu) = mxca(:,imu,inu)  & 
+             &              - rhop_a*d2muxc_in*(prho_in_neighbors%block(imu,inu)  & 
+             &             -prhoS_in_neighbors%block(issh,jssh)*poverlap_neighbors%block(imu,inu)) &
+             &             - dmuxc_in*rhoxa(:,imu,inu)
+             
+                       mxcb(:,imu,inu) = mxcb(:,imu,inu)  &
+             &              - rhop_b*d2muxc_in*(prho_in_neighbors%block(imu,inu)  & 
+             &             -prhoS_in_neighbors%block(issh,jssh)*poverlap_neighbors%block(imu,inu)) &
+             &             - dmuxc_in*rhoxb(:,imu,inu)
+             
+                       mxcc(:,imu,inu) = mxcc(:,imu,inu)  &
+             &              - rhop_c*d2muxc_in*(prho_in_neighbors%block(imu,inu)  & 
+             &             -prhoS_in_neighbors%block(issh,jssh)*poverlap_neighbors%block(imu,inu)) &
+             &             - dmuxc_in*rhoxc(:,imu,inu)
+
+                      
+                     end do !** m2 = -l2, l2
+                   end do !** m1 = -l1, l1
+                   n2 = n2 + l2
                 end do ! jssh = 1, species(in2)%nssh
+                n1 = n1 + l1
               end do ! issh = 1, species(in1)%nss
+              
+              do inu =1, norb_nu
+                do imu=1, norb_mu
+                  pfalpha%f3xca= pfalpha%f3xca  +pRho_neighbors%block(imu,inu)*mxca(:,imu,inu)
+                  
+                  pfi%f3xcb = pfi%f3xcb +pRho_neighbors%block(imu,inu)*mxcb(:,imu,inu)
+                  
+                  pfj%f3xcc = pfj%f3xcc +pRho_neighbors%block(imu,inu)*mxcc(:,imu,inu)
+                  
+                end do !imu , norb_mu
+              end do !inu =1, norb_nu
                    
             end if ! if (mneigh .ne. 0)
             deallocate (rhoxa, rhoxb, rhoxc)
+            deallocate (mxca, mxcb, mxcc)
             deallocate (rhoma_weig, rhomb_weig, rhomc_weig)
           end do ! end loop over neighbors
         end do ! end loop over atoms

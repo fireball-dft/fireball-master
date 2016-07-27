@@ -368,11 +368,11 @@
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
                   pfalpha%f3naa = pfalpha%f3naa                              &
-      &             + pRho_neighbors%block(imu,inu)*f3naXa(:,imu,inu)
+      &             - pRho_neighbors%block(imu,inu)*f3naXa(:,imu,inu)
                   pfi%f3nab = pfi%f3nab                                      &
-      &             + pRho_neighbors%block(imu,inu)*f3naXb(:,imu,inu)
+      &             - pRho_neighbors%block(imu,inu)*f3naXb(:,imu,inu)
                   pfj%f3nac = pfj%f3nac                                      &
-      &             + pRho_neighbors%block(imu,inu)*f3naXc(:,imu,inu)
+      &             - pRho_neighbors%block(imu,inu)*f3naXc(:,imu,inu)
                 end do
               end do
 

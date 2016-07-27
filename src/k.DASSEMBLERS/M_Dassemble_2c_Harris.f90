@@ -584,7 +584,6 @@
         ! density matrix stuff
         type(T_assemble_neighbors), pointer :: pdenmat
         type(T_assemble_block), pointer :: pRho_neighbors
-        type(T_assemble_block), pointer :: pRho_neighbors_matom
 
         type(T_forces), pointer :: pfi
 
@@ -723,10 +722,8 @@
 ! dbcnam = derivative of Hartree matrix in molecular coordinates
 ! vdbcnam = vectorized derivative of Hartree matrix in molecular coordinates
 ! vdbcnax = vectorized derivative of Hartree matrix in crystal coordinates
-              bcnam = 0.0d0
-              dbcnam = 0.0d0
-              vdbcnam = 0.0d0
-              vdbcnax = 0.0d0
+              bcnam = 0.0d0; dbcnam = 0.0d0
+              vdbcnam = 0.0d0; vdbcnax = 0.0d0
               call getDMEs_Fdata_2c (in1, in2, interaction, isorp, z,         &
      &                               norb_mu, norb_nu, bcnam, dbcnam)
 
@@ -745,6 +742,7 @@
               call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,    &
      &                      vdbcnam, vdbcnax)
 
+! Notice the explicit negative sign, this makes it force like.
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
                   pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)          &
@@ -775,12 +773,12 @@
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
 
           ! cut some lengthy notation
           pvna=>s%vna(iatom)
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)

@@ -739,13 +739,23 @@
 
         type(T_assemble_block), pointer :: pS_neighbors
         type(T_assemble_neighbors), pointer :: poverlap
-
         type(T_assemble_block), pointer :: pvna_neighbors
         type(T_assemble_neighbors), pointer :: pvna
 
+        ! density matrix stuff
+        type(T_assemble_neighbors), pointer :: pdenmat
+        type(T_assemble_block), pointer :: pRho_neighbors
+
+        type(T_forces), pointer :: pfi
+
 ! Allocate Arrays
 ! ===========================================================================
-! None
+        do iatom = 1, s%natoms
+          pfi=>s%forces(iatom)
+          num_neigh = s%neighbors(iatom)%neighn
+!         allocate (pfi%vna_atom (3, num_neigh)); pfi%vna_atom = 0.0d0
+          allocate (pfi%vna_ontop (3, num_neigh)); pfi%vna_ontop = 0.0d0
+        end do
 
 ! Procedure
 ! ===========================================================================
@@ -757,12 +767,14 @@
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
 
           ! cut some lengthy notation
           pvna=>s%vna(iatom)
+          pdenmat=>s%denmat(iatom)
+          pfi=>s%forces(iatom)
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
@@ -771,13 +783,12 @@
 
             ! cut some more lengthy notation
             pvna_neighbors=>pvna%neighbors(ineigh)
+            pRho_neighbors=>pdenmat%neighbors(ineigh)
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
             allocate (pvna_neighbors%Dblock (3, norb_mu, norb_mu))
-            allocate (pvna_neighbors%Dblocko (3, norb_mu, norb_nu))
             pvna_neighbors%Dblock = 0.0d0
-            pvna_neighbors%Dblocko = 0.0d0
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -829,7 +840,6 @@
 ! vdbcnam = vectorized derivative of Hartree matrix in molecular coordinates
 ! vdbcnax = vectorized derivative of Hartree matrix in crystal coordinates
               allocate (bcnam (norb_mu, norb_nu)); bcnam = 0.0d0
-              allocate (bcnax (norb_mu, norb_nu)); bcnax = 0.0d0
               allocate (dbcnam (norb_mu, norb_nu)); dbcnam = 0.0d0
               allocate (vdbcnam (3, norb_mu, norb_nu)); vdbcnam = 0.0d0
               allocate (vdbcnax (3, norb_mu, norb_nu)); vdbcnax = 0.0d0
@@ -853,14 +863,21 @@
 
  			  call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,    &
      &	                    vdbcnam, vdbcnax)
-			  pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + vdbcnax*P_eq2
+
+! Notice the explicit negative sign, this makes it force like.
+              do inu = 1, norb_nu
+                do imu = 1, norb_mu
+                  pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)          &
+     &             - pRho_neighbors%block(imu,inu)*vdbcnax(:,imu,inu)*P_eq2
+                end do
+              end do
 
 ! Charged atom case
               do isorp = 1, species(in1)%nssh
                 dQ = s%atom(iatom)%shell(isorp)%dQ
 
 ! Reinitialize
-                bcnam = 0.0d0; bcnax = 0.0d0; dbcnam = 0.0d0
+                bcnam = 0.0d0; dbcnam = 0.0d0
                 vdbcnam = 0.0d0; vdbcnax = 0.0d0
                 call getDMEs_Fdata_2c (in1, in2, interaction, isorp, z,      &
      &                                 norb_mu, norb_nu, bcnam, dbcnam)
@@ -879,7 +896,14 @@
 
  			    call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,  &
      &	                      vdbcnam, vdbcnax)
-			    pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + dQ*vdbcnax*P_eq2
+
+! Notice the explicit negative sign, this makes it force like.
+                do inu = 1, norb_nu
+                  do imu = 1, norb_mu
+                    pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)        &
+     &               - pRho_neighbors%block(imu,inu)*dQ*vdbcnax(:,imu,inu)*P_eq2
+                  end do
+                end do
               end do ! end loop over isorp
 
 ! FORCES - ONTOP RIGHT CASE
@@ -892,8 +916,8 @@
               in3 = in2
 
 ! Reinitialize
-              bcnam = 0.0d0; bcnax = 0.0d0 ; dbcnam = 0.0d0
-              vdbcnam = 0.0d0 ; vdbcnax = 0.0d0
+              bcnam = 0.0d0; dbcnam = 0.0d0
+              vdbcnam = 0.0d0; vdbcnax = 0.0d0
 
 ! Neutral atom piece
               isorp = 0
@@ -914,14 +938,21 @@
 
               call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,    &
      &                      vdbcnam, vdbcnax)
-              pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + vdbcnax*P_eq2
+
+! Notice the explicit negative sign, this makes it force like.
+              do inu = 1, norb_nu
+                do imu = 1, norb_mu
+                  pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)          &
+     &             - pRho_neighbors%block(imu,inu)*vdbcnax(:,imu,inu)*P_eq2
+                end do
+              end do
 
 ! Charged atom case
               do isorp = 1, species(in3)%nssh
                 dQ = s%atom(jatom)%shell(isorp)%dQ
 
 ! Reinitialize
-                bcnam = 0.0d0; bcnax = 0.0d0; dbcnam = 0.0d0
+                bcnam = 0.0d0; dbcnam = 0.0d0
                 vdbcnam = 0.0d0; vdbcnax = 0.0d0
                 call getDMEs_Fdata_2c (in1, in2, interaction, isorp, z,      &
      &                                 norb_mu, norb_nu, bcnam, dbcnam)
@@ -940,9 +971,16 @@
 
                 call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,  &
      &                        vdbcnam, vdbcnax)
-                pvna_neighbors%Dblocko = pvna_neighbors%Dblocko + dQ*vdbcnax*P_eq2
+
+! Notice the explicit negative sign, this makes it force like.
+                do inu = 1, norb_nu
+                  do imu = 1, norb_mu
+                    pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)        &
+     &               - pRho_neighbors%block(imu,inu)*dQ*vdbcnax(:,imu,inu)*P_eq2
+                  end do
+                end do
               end do ! end loop over isorp
-              deallocate (bcnam, bcnax, dbcnam, vdbcnam, vdbcnax)
+              deallocate (bcnam, dbcnam, vdbcnam, vdbcnax)
             end if ! end if for r1 .eq. r2 case
           end do ! end loop over neighbors
         end do ! end loop over atoms
@@ -958,7 +996,6 @@
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
           matom = s%neigh_self(iatom)
 
           ! cut some lengthy notation
@@ -966,6 +1003,7 @@
           poverlap=>s%overlap(iatom); pS_neighbors=>poverlap%neighbors(matom)
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
@@ -1104,7 +1142,7 @@
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
                   pvna_neighbors%Dblock(:,imu,inu) = pvna_neighbors%Dblock(:,imu,inu) &
-     &          + P_eq2*(- eta(:)*Dsmooth*bcnax(imu,inu) + smooth*vdbcnax(:,imu,inu)  &
+     &             + P_eq2*(- eta(:)*Dsmooth*bcnax(imu,inu) + smooth*vdbcnax(:,imu,inu) &
      &             + eta(:)*Dsmooth*emnpl(imu,inu) + (1 - smooth)*vdemnpl(:,imu,inu))*dQ
                 end do
               end do
