@@ -8,7 +8,7 @@ The code is undergoing important reestructuring that will be sumarized here:
 
    The structure of the sources looks now like this:
 
-        a.GLOBAL
+    a.GLOBAL
 	b.FUNCTIONS
 	c.SYSTEM
 	d.FUNCTIONS_EXTRA
