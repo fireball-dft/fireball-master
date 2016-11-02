@@ -108,7 +108,7 @@
         integer ineigh, mneigh           !< counter over neighbors
         integer in1, in2, in3            !< species numbers
         integer isubtype                 !< which subtype
-        integer interaction, isorp       !< which interaction and subtype
+!        integer interaction, isorp       !< which interaction and subtype
         integer ix, iindex
         integer nssh_i, nssh_j           !< size of the block for the pair
         integer issh, jssh               !< counter over shells
@@ -122,14 +122,14 @@
         real muxc_in                       !< xc potential_
         real d2muxc_in                     !< 2nd derivative of xc
         
-        real vxc_mag                     !< magnitud like term
+!        real vxc_mag                     !< magnitud like term
         real Qneutral                    !< charge
         real z                           !< distances between r1 and r2
         real x, cost                     !< dnabc and angle
         real rho_aver
 
         real, dimension (3, 3) :: eps     !< the epsilon matrix
-        real, dimension (3, 3, 3) :: deps !< derivative of epsilon matrix
+!        real, dimension (3, 3, 3) :: deps !< derivative of epsilon matrix
         real, dimension (3) :: r1, r2, r3, r12, r21   !< positions
         real, dimension (3) :: sighat     !< unit vector along r2 - r1
         real, dimension (3) :: rhat       !< unit vector along bc - r3

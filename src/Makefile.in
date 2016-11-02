@@ -150,7 +150,7 @@ FUNCTIONS = clebsch_gordan.o clm.o factorial.o simpson.o distance.o magnitude.o 
 SYSTEM_BEGIN =  M_species.o M_atom_functions.o M_atomPP_functions_KB.o M_atomPP_ion_functions_KB.o M_integrals_2c.o
 SYSTEM_LOOPRC = M_species.o M_atom_functions.o M_atomPP_functions_KB.o M_integrals_2c.o
 SYSTEM_CREATE = M_species.o M_atom_functions.o M_integrals_2c.o M_integrals_3c.o M_atomPP_functions_KB.o M_atomPP_ion_functions_KB.o
-SYSTEM_LIGHTNING = M_species.o M_kpoints.o M_configuraciones_McWEDA.o M_atom_functions.o M_neighbors.o M_neighbors_PP.o M_rotations.o M_grid.o
+SYSTEM_LIGHTNING = M_species.o M_kpoints.o M_configuraciones_McWEDA.o M_atom_functions.o M_neighbors.o M_neighbors_PP.o M_rotations.o M_grid.o rotate_PP.o
 SYSTEM = M_species.o M_kpoints.o M_configuraciones_McWEDA.o M_neighbors.o M_neighbors_PP.o M_atom_functions.o M_rotations.o M_integrals_2c.o M_grid.o M_Drotations.o M_Drotations_PP.o M_build_forces.o rotate_PP.o
 
 BEGIN = M_psi.o M_rcatms_Coulomb.o M_rcatms_Coulomb_DMOL_excited.o M_rcatms_DMOL_excited.o M_rcatms.o orthogonalize_psi.o M_vnn.o
